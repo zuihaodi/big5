@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>大五人格选词测评（基于 PI 词表的原型）</title>
+  <title>大五人格选词测评（多维权重版原型）</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
@@ -79,17 +79,17 @@
     .btn:hover:not(:disabled) {
       background: #1d4ed8;
     }
-    .result-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .dim-block {
+    .section-block {
       border-bottom: 1px solid #e5e7eb;
       padding: 8px 0 10px;
     }
-    .dim-block:last-child {
+    .section-block:last-child {
       border-bottom: none;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
     }
     .extra-block {
       border-top: 1px solid #e5e7eb;
@@ -134,12 +134,12 @@
 </head>
 <body>
   <div class="container">
-    <!-- 问卷卡片（6 页向导） -->
+    <!-- 问卷卡片（分页向导） -->
     <div class="card">
-      <div class="title">大五人格选词测评（原型，基于 PI 词表）</div>
+      <div class="title">大五人格选词测评（多维权重版原型）</div>
       <div class="subtitle">
-        从下面的词语中勾选「比较像我」的描述（可以多选，也可以一条都不选）。词语顺序已随机打乱，不显示属于哪个维度。<br>
-        当前版本用于自我觉察和框架原型测试，不用于招聘淘汰或临床诊断。
+        请从下面的词语中勾选「比较像我」的描述（可以多选，也可以一条都不选）。<br>
+        词语顺序已随机打乱，不显示属于哪个维度。当前版本用于自我觉察和方法验证，不用于招聘淘汰或临床诊断。
       </div>
 
       <form id="traitForm" onsubmit="return false;">
@@ -159,7 +159,7 @@
     <div id="resultContainer" class="card" style="display:none;">
       <div class="title">测评结果</div>
       <div class="subtitle">
-        雷达图数值范围为 0–1，越接近 1 表示该维度偏高。上方为全局类型推断（MBTI / PI），中部为大五各维度说明与能力关键词；最底部为扩展说明（MBTI / PI / 颜色 / PDP 映射），主要供教练/内部使用。
+        雷达图数值范围为 0–1，越接近 1 表示该维度偏高。中部为大五整体画像与能力关键词，其后是全局类型推断（MBTI / PI / 颜色 / PDP，仅供参考），最底部为维度级扩展说明。
       </div>
       <div style="margin-bottom:16px; text-align:center;">
         <canvas id="big5Chart" width="320" height="220"></canvas>
@@ -169,84 +169,223 @@
   </div>
 
   <script>
-    // ========= 可调参数：最少 / 最多选多少个 =========
-    const MIN_SELECTED = 10;   // 至少勾选 10 个词语
-    const MAX_SELECTED = 40;   // 最多勾选 40 个，避免“几乎全选”
+    // ====== 参数：最少 / 最多可选条目数 ======
+    const MIN_SELECTED = 10;   // 至少选择 10 个词
+    const MAX_SELECTED = 30;   // 最多选择 30 个，避免“全都像我”
 
-    // =========================
-    // 1. 题目数据：基于 PI 词表，按语义映射到大五
-    // dim: O/C/E/A/N；polarity: 1=高该维度；-1=低该维度；weight: 权重
-    // =========================
+    // =========================================================
+    // 1. 条目库：每个词对 O/C/E/A/N 五个维度都有一个权重（-1 ~ +1）
+    // =========================================================
     const traits = [
-      // --- 支配 / 主导相关 ---
-      { id: "t1",  dim: "E", polarity: 1,  weight: 1.3, label: "表达坚定、有主见（Assertive）" },
-      { id: "t2",  dim: "E", polarity: 1,  weight: 1.3, label: "习惯在决策中起主导（Dominant）" },
-      { id: "t3",  dim: "E", polarity: 1,  weight: 1.2, label: "风格比较强势（Forceful）" },
-      { id: "t4",  dim: "N", polarity: 1,  weight: 1.2, label: "面对挑战时整体较从容（Brave）" },
-      { id: "t5",  dim: "O", polarity: 1,  weight: 1.3, label: "愿意尝试新做法（Daring）" },
-      { id: "t6",  dim: "C", polarity: 1,  weight: 1.1, label: "做事比较坚决（Resolute）" },
-      { id: "t7",  dim: "A", polarity: -1, weight: 1.0, label: "在竞争场景中比较在意输赢（Competitive）" },
-      { id: "t8",  dim: "N", polarity: 1,  weight: 1.2, label: "整体比较自信、稳定（Self-assured）" },
-      { id: "t9",  dim: "A", polarity: -1, weight: 1.0, label: "对他人要求偏严格（Stern）" },
-      { id: "t10", dim: "C", polarity: 1,  weight: 1.1, label: "执行标准较为严格（Strict）" },
-      { id: "t11", dim: "A", polarity: -1, weight: 1.2, label: "喜欢就观点展开争论（Argumentative）" },
+      // --- O：开放性相关 ---
+      {
+        id: "t1",
+        label: "对新鲜事物保持强烈好奇，愿意主动探索（Curious & exploratory）",
+        weights: { O: 0.7, C: 0.1, E: 0.2, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t2",
+        label: "更喜欢按照既有经验和流程来做事（Prefer familiar routines）",
+        weights: { O: -0.6, C: 0.4, E: 0.0, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t3",
+        label: "容易联想到抽象概念或大图景，而不是具体细节（Big-picture oriented）",
+        weights: { O: 0.7, C: -0.2, E: 0.1, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t4",
+        label: "偏好具体、可见、可操作的事情，而不是抽象讨论（Concrete focused）",
+        weights: { O: -0.6, C: 0.2, E: 0.0, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t5",
+        label: "愿意尝试非传统或少有人走的路径（Non-conventional）",
+        weights: { O: 0.7, C: -0.2, E: 0.2, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t6",
+        label: "做决定时更看重安全感和可控性（Safety-oriented）",
+        weights: { O: -0.4, C: 0.4, E: 0.0, A: 0.0, N: 0.2 }
+      },
+      {
+        id: "t7",
+        label: "经常提出改进或创新的想法（Idea generator）",
+        weights: { O: 0.7, C: 0.1, E: 0.2, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t8",
+        label: "更愿意把成熟方案执行到位，而不是重新设计（Executor of existing plans）",
+        weights: { O: -0.5, C: 0.6, E: 0.0, A: 0.0, N: 0.1 }
+      },
 
-      // --- 外向 / 影响力 -> E ---
-      { id: "t12", dim: "E", polarity: 1,  weight: 1.3, label: "喜欢社交互动（Sociable）" },
-      { id: "t13", dim: "E", polarity: 1,  weight: 1.1, label: "表达有说服力（Persuasive）" },
-      { id: "t14", dim: "E", polarity: 1,  weight: 1.0, label: "容易让人信服（Convincing）" },
-      { id: "t15", dim: "E", polarity: 1,  weight: 1.0, label: "个人气场较强（Magnetic）" },
-      { id: "t16", dim: "E", polarity: 1,  weight: 1.1, label: "在群体中影响力较大（Influential）" },
-      { id: "t17", dim: "E", polarity: 1,  weight: 1.1, label: "给人感觉有魅力（Charming）" },
-      { id: "t18", dim: "E", polarity: 1,  weight: 1.3, label: "话比较多、表达欲强（Talkative）" },
-      { id: "t19", dim: "E", polarity: 1,  weight: 1.0, label: "精力充沛、状态积极（Spirited）" },
-      { id: "t20", dim: "E", polarity: 1,  weight: 1.0, label: "容易带来氛围和趣味（Entertaining）" },
-      { id: "t21", dim: "E", polarity: 1,  weight: 1.2, label: "容易和不同圈层打成一片（Good mixer）" },
-      { id: "t22", dim: "E", polarity: 1,  weight: 1.3, label: "整体偏外向，喜欢热闹（Outgoing）" },
+      // --- C：尽责性相关 ---
+      {
+        id: "t9",
+        label: "做事喜欢提前规划，有清单或日程安排（Planner）",
+        weights: { O: 0.1, C: 0.7, E: 0.0, A: 0.0, N: 0.2 }
+      },
+      {
+        id: "t10",
+        label: "经常临近截止日期才开始行动（Deadline driven）",
+        weights: { O: 0.2, C: -0.7, E: 0.1, A: 0.0, N: -0.1 }
+      },
+      {
+        id: "t11",
+        label: "更在意把事情做“对”，而不仅仅是做完（Quality focused）",
+        weights: { O: 0.1, C: 0.7, E: 0.0, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t12",
+        label: "容易同时开很多任务，推进节奏较随性（Multi-task & flexible）",
+        weights: { O: 0.3, C: -0.6, E: 0.1, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t13",
+        label: "愿意为目标长期投入和坚持（Persistent）",
+        weights: { O: 0.0, C: 0.7, E: 0.0, A: 0.1, N: 0.2 }
+      },
+      {
+        id: "t14",
+        label: "对规则和流程有自己的理解，并不总是严格遵守（Rule-bending）",
+        weights: { O: 0.3, C: -0.6, E: 0.1, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t15",
+        label: "做事比较注重细节，习惯反复检查（Detail-oriented）",
+        weights: { O: -0.1, C: 0.7, E: 0.0, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t16",
+        label: "更愿意先动起来，再边做边调整（Action before structure）",
+        weights: { O: 0.3, C: -0.6, E: 0.2, A: 0.0, N: 0.0 }
+      },
 
-      // --- 耐心 / 稳定 -> C / N / A ---
-      { id: "t23", dim: "C", polarity: 1,  weight: 1.1, label: "做事较有耐心（Patient）" },
-      { id: "t24", dim: "N", polarity: 1,  weight: 1.2, label: "性格整体稳定（Stable/Steady）" },
-      { id: "t25", dim: "N", polarity: 1,  weight: 1.3, label: "遇事通常能保持冷静（Calm）" },
-      { id: "t26", dim: "N", polarity: 1,  weight: 1.2, label: "平时比较放松、不紧绷（Relaxed）" },
-      { id: "t27", dim: "A", polarity: 1,  weight: 1.2, label: "对人温和、有亲和力（Gentle）" },
-      { id: "t28", dim: "A", polarity: 1,  weight: 1.3, label: "给人感觉友好、易相处（Amiable）" },
-      { id: "t29", dim: "A", polarity: 1,  weight: 1.1, label: "整体风格较随和（Easy-going）" },
-      { id: "t30", dim: "E", polarity: -1, weight: 1.0, label: "不太主动发起互动（Passive）" },
-      { id: "t31", dim: "N", polarity: 1,  weight: 1.1, label: "喜欢平和、安静的氛围（Peaceful）" },
-      { id: "t32", dim: "C", polarity: 1,  weight: 1.1, label: "行动前会多想一想（Deliberate）" },
+      // --- E：外向性相关 ---
+      {
+        id: "t17",
+        label: "从人群和互动中恢复能量（Energized by people）",
+        weights: { O: 0.1, C: 0.0, E: 0.7, A: 0.1, N: 0.1 }
+      },
+      {
+        id: "t18",
+        label: "更喜欢安静、独处的时间来思考或充电（Energized by solitude）",
+        weights: { O: 0.2, C: 0.0, E: -0.7, A: 0.0, N: 0.2 }
+      },
+      {
+        id: "t19",
+        label: "在陌生场合也能较自然地主动开口（Socially proactive）",
+        weights: { O: 0.1, C: 0.0, E: 0.7, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t20",
+        label: "不太喜欢成为众人关注的焦点（Prefer low profile）",
+        weights: { O: 0.0, C: 0.0, E: -0.6, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t21",
+        label: "表达比较顺畅，面对多人说话压力不大（Comfortable speaking to groups）",
+        weights: { O: 0.0, C: 0.0, E: 0.7, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t22",
+        label: "更倾向通过文字、书面方式沟通（Prefer written communication）",
+        weights: { O: 0.1, C: 0.1, E: -0.6, A: 0.0, N: 0.1 }
+      },
+      {
+        id: "t23",
+        label: "在团队中自然承担带动气氛或组织活动的角色（Informal leader in groups）",
+        weights: { O: 0.1, C: 0.1, E: 0.7, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t24",
+        label: "更习惯深度一对一交流，而不是大范围社交（Prefers 1-to-1 talks）",
+        weights: { O: 0.2, C: 0.0, E: -0.5, A: 0.2, N: 0.1 }
+      },
 
-      // --- 严谨 / 规范 -> C / O / N ---
-      { id: "t33", dim: "C", polarity: 1,  weight: 1.3, label: "做事认真负责（Conscientious）" },
-      { id: "t34", dim: "C", polarity: 1,  weight: 1.2, label: "对标准要求偏高（Exacting）" },
-      { id: "t35", dim: "C", polarity: 1,  weight: 1.3, label: "在意把事情做到最好（Perfectionist）" },
-      { id: "t36", dim: "C", polarity: 1,  weight: 1.2, label: "比较追求准确、少出错（Accurate）" },
-      { id: "t37", dim: "C", polarity: 1,  weight: 1.0, label: "做事风格偏严谨（Serious）" },
-      { id: "t38", dim: "O", polarity: -1, weight: 1.1, label: "更偏好沿用传统做法（Conventional）" },
-      { id: "t39", dim: "O", polarity: -1, weight: 1.0, label: "在场合中偏正式、讲规矩（Formal）" },
-      { id: "t40", dim: "O", polarity: -1, weight: 1.1, label: "做决定时较为谨慎（Cautious）" },
-      { id: "t41", dim: "N", polarity: -1, weight: 1.3, label: "对潜在风险比较敏感（Worrying）" },
-      { id: "t42", dim: "C", polarity: 1,  weight: 1.0, label: "在细节和标准上比较讲究（Fussy）" },
+      // --- A：宜人性相关 ---
+      {
+        id: "t25",
+        label: "做决定时会主动考虑他人的感受和利益（Considerate of others）",
+        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.7, N: 0.1 }
+      },
+      {
+        id: "t26",
+        label: "更倾向于坚持原则和立场，即便有人不高兴（Principle-first）",
+        weights: { O: 0.0, C: 0.2, E: 0.1, A: -0.6, N: 0.0 }
+      },
+      {
+        id: "t27",
+        label: "冲突出现时，会先尝试缓和和协调（Conflict-softening）",
+        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.7, N: 0.1 }
+      },
+      {
+        id: "t28",
+        label: "在讨论中更在意观点是否正确，而不是气氛是否融洽（Fact-focused）",
+        weights: { O: 0.1, C: 0.1, E: 0.0, A: -0.6, N: 0.0 }
+      },
+      {
+        id: "t29",
+        label: "比较容易体会到他人的处境和感受（Empathic）",
+        weights: { O: 0.1, C: 0.0, E: 0.0, A: 0.7, N: 0.1 }
+      },
+      {
+        id: "t30",
+        label: "对他人的动机和承诺会保持一定怀疑（Skeptical of motives）",
+        weights: { O: 0.1, C: 0.1, E: 0.0, A: -0.7, N: -0.1 }
+      },
+      {
+        id: "t31",
+        label: "倾向寻找双赢方案，让各方都尽量满意（Win-win oriented）",
+        weights: { O: 0.1, C: 0.1, E: 0.0, A: 0.7, N: 0.1 }
+      },
+      {
+        id: "t32",
+        label: "在谈合作或分配资源时，会比较主动争取自己的一侧（Self-advocating）",
+        weights: { O: 0.0, C: 0.1, E: 0.1, A: -0.6, N: 0.0 }
+      },
 
-      // --- 其他 -> A / N / C / O ---
-      { id: "t43", dim: "A", polarity: 1,  weight: 1.3, label: "乐于为他人提供帮助（Helpful）" },
-      { id: "t44", dim: "A", polarity: 1,  weight: 1.3, label: "对他人有同理心（Sympathetic）" },
-      { id: "t45", dim: "A", polarity: 1,  weight: 1.2, label: "看重忠诚与承诺（Loyal）" },
-      { id: "t46", dim: "A", polarity: 1,  weight: 1.0, label: "总体比较谦虚低调（Humble）" },
-      { id: "t47", dim: "N", polarity: -1, weight: 1.1, label: "在陌生情境中会偏谨慎（Timid）" },
-      { id: "t48", dim: "N", polarity: -1, weight: 1.3, label: "在压力情境下更容易紧张（Fearful）" },
-      { id: "t49", dim: "A", polarity: -1, weight: 1.3, label: "资源分配时会优先考虑自己（Selfish）" },
-      { id: "t50", dim: "A", polarity: -1, weight: 1.2, label: "对他人动机通常较为怀疑（Cynical）" },
-      { id: "t51", dim: "A", polarity: -1, weight: 1.2, label: "表达观点时有时会用讽刺方式（Sarcastic）" },
-      { id: "t52", dim: "A", polarity: -1, weight: 1.1, label: "在分歧中不太容易让步（Obstinate）" },
-      { id: "t53", dim: "C", polarity: -1, weight: 1.2, label: "有时会按当下感觉快速行动（Impulsive）" },
-      { id: "t54", dim: "C", polarity: -1, weight: 1.3, label: "执行中偶尔会忽略细节（Careless）" },
-      { id: "t55", dim: "N", polarity: -1, weight: 1.2, label: "压力大时会想先躲开一下（Escapist）" },
-      { id: "t56", dim: "N", polarity: -1, weight: 1.2, label: "闲下来时不太容易完全放松（Restless）" },
-      { id: "t57", dim: "O", polarity: 1,  weight: 1.3, label: "思路和做法比较灵活（Flexible）" },
-      { id: "t58", dim: "A", polarity: 1,  weight: 1.2, label: "对不同观点比较宽容（Tolerant）" },
-      { id: "t59", dim: "A", polarity: 1,  weight: 1.3, label: "善于理解他人立场（Understanding）" },
-      { id: "t60", dim: "A", polarity: 1,  weight: 1.3, label: "乐于分享与付出（Generous）" }
+      // --- N：情绪稳定性相关（高 N = 稳定，低 N = 敏感） ---
+      {
+        id: "t33",
+        label: "压力下通常也能保持相对冷静（Calm under pressure）",
+        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.0, N: 0.7 }
+      },
+      {
+        id: "t34",
+        label: "遇到不确定或变化时，容易紧张或反复担心（Anxious about uncertainty）",
+        weights: { O: -0.1, C: 0.1, E: 0.0, A: 0.0, N: -0.7 }
+      },
+      {
+        id: "t35",
+        label: "情绪起伏不大，很少出现极端情绪（Emotionally even）",
+        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.0, N: 0.7 }
+      },
+      {
+        id: "t36",
+        label: "受到负面反馈时，会在心里反复咀嚼很久（Ruminates on criticism）",
+        weights: { O: 0.1, C: 0.0, E: 0.0, A: 0.0, N: -0.7 }
+      },
+      {
+        id: "t37",
+        label: "遇到困难时，比较容易重新振作并寻找办法（Resilient）",
+        weights: { O: 0.1, C: 0.2, E: 0.0, A: 0.0, N: 0.7 }
+      },
+      {
+        id: "t38",
+        label: "在压力大或节奏快的时候，睡眠或情绪容易受影响（Stress-sensitive）",
+        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.0, N: -0.7 }
+      },
+      {
+        id: "t39",
+        label: "能较快从挫折中抽离出来，回到日常节奏（Quick recovery）",
+        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.0, N: 0.7 }
+      },
+      {
+        id: "t40",
+        label: "对潜在风险或最坏情况经常有比较多设想（Vivid worst-case imagination）",
+        weights: { O: 0.2, C: 0.0, E: 0.0, A: 0.0, N: -0.7 }
+      }
     ];
 
     const dimensionMeta = {
@@ -254,12 +393,12 @@
       C: { name: "尽责性 C" },
       E: { name: "外向性 E" },
       A: { name: "宜人性 A" },
-      N: { name: "情绪稳定性 N" } // N 这里定义为稳定性高/低
+      N: { name: "情绪稳定性 N" } // 高 N = 稳定；低 N = 敏感
     };
 
-    // =========================
-    // 2. 结果解释配置（含 MBTI / PI / 颜色 / PDP 映射）
-    // =========================
+    // =========================================================
+    // 2. 分档解释配置（沿用你之前的 O/C/E/A/N 四档框架）
+    // =========================================================
     const profiles = {
       O: {
         1: {
@@ -453,9 +592,9 @@
       }
     };
 
-    // =========================
-    // 3. 工具函数：打乱 & 分页
-    // =========================
+    // =========================================================
+    // 3. 工具：打乱、分页
+    // =========================================================
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -463,7 +602,7 @@
       }
     }
 
-    const PAGE_COUNT = 6; // 6 页
+    const PAGE_COUNT = 6; // 固定 6 页
     let currentPage = 0;
     let totalPages = PAGE_COUNT;
     let hasSubmitted = false;
@@ -475,7 +614,7 @@
       const items = traits.slice();
       shuffle(items);
 
-      const perPage = Math.ceil(items.length / PAGE_COUNT); // 60/6=10
+      const perPage = Math.ceil(items.length / PAGE_COUNT);
 
       for (let p = 0; p < PAGE_COUNT; p++) {
         const pageDiv = document.createElement("div");
@@ -537,65 +676,79 @@
       }
     }
 
-    // =========================
-    // 4. 计算得分（支持权重）
-    // =========================
+    // =========================================================
+    // 4. 计算得分：多维权重算法
+    //    每个条目是一个五维向量，先对每维求加权和，再按该维最大可能值归一化到 [-1,1]，再转 [0,1]
+    // =========================================================
+    function clamp(x, min, max) {
+      return Math.max(min, Math.min(max, x));
+    }
+
     function computeScores() {
       const dims = ["O", "C", "E", "A", "N"];
       const result = {};
+      const maxAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+      const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
 
-      dims.forEach(dim => {
-        const dimTraits = traits.filter(t => t.dim === dim);
-        let maxAbsSum = 0;
-        let raw = 0;
-
-        dimTraits.forEach(tr => {
-          maxAbsSum += tr.weight;
-          const checked = document.getElementById(tr.id).checked;
-          if (checked) {
-            raw += tr.polarity * tr.weight;
-          }
+      // 理论最大绝对值：所有条目的 |w| 之和
+      traits.forEach(tr => {
+        dims.forEach(d => {
+          const w = (tr.weights && typeof tr.weights[d] === "number") ? tr.weights[d] : 0;
+          maxAbs[d] += Math.abs(w);
         });
+      });
 
-        let norm = 0.5;
-        if (maxAbsSum > 0) {
-          norm = (raw + maxAbsSum) / (2 * maxAbsSum);
-        }
+      // 用户实际选择：对每个维度累加对应权重
+      traits.forEach(tr => {
+        const checked = document.getElementById(tr.id).checked;
+        if (!checked) return;
+        dims.forEach(d => {
+          const w = (tr.weights && typeof tr.weights[d] === "number") ? tr.weights[d] : 0;
+          raw[d] += w;
+        });
+      });
+
+      // 归一化 & 分档
+      dims.forEach(d => {
+        const maxVal = maxAbs[d] || 1; // 防止除 0
+        let normSigned = raw[d] / maxVal;    // [-1,1]
+        normSigned = clamp(normSigned, -1, 1);
+        const norm01 = (normSigned + 1) / 2; // 映射到 [0,1]
 
         let stage = 1;
-        if (norm >= 0.75) stage = 4;
-        else if (norm >= 0.5) stage = 3;
-        else if (norm >= 0.25) stage = 2;
+        if (norm01 >= 0.65) stage = 4;
+        else if (norm01 >= 0.5) stage = 3;
+        else if (norm01 >= 0.35) stage = 2;
 
-        result[dim] = { raw, norm, stage };
+        result[d] = {
+          raw: raw[d],
+          norm: norm01,
+          stage: stage
+        };
       });
 
       return result;
     }
 
-    // =========================
-    // 4.5 全局 MBTI 推断 & 全局 PI 推断
-    // =========================
+    // =========================================================
+    // 5. 全局 MBTI / PI / 颜色 / PDP 推断 + 大五整体自然语言叙述
+    // =========================================================
     function inferGlobalMBTI(scores) {
       const O = scores.O.norm;
       const C = scores.C.norm;
       const E = scores.E.norm;
       const A = scores.A.norm;
 
-      const ei = E >= 0.5 ? "E" : "I";   // 外向性高 → E，否则 I
-      const sn = O >= 0.5 ? "N" : "S";   // 开放性高 → N，否则 S
-      const tf = A >= 0.5 ? "F" : "T";   // 宜人性高 → F，否则 T
-      const jp = C >= O ? "J" : "P";     // 尽责性相对更高 → J，否则 P
+      const ei = E >= 0.5 ? "E" : "I";
+      const sn = O >= 0.5 ? "N" : "S";
+      const tf = A >= 0.5 ? "F" : "T";
+      const jp = C >= O ? "J" : "P";
 
       const type = ei + sn + tf + jp;
       const explanation =
-        "本类型为基于大五轮廓的近似推断：E/I 来自外向性，S/N 来自开放性，T/F 来自宜人性高低，J/P 由尽责性相对开放性的高低推断，仅供参考，不等同于正式 MBTI 测验结果。";
+        "该类型为基于大五轮廓的近似推断：E/I 来自外向性，S/N 来自开放性，T/F 来自宜人性高低，J/P 由尽责性相对开放性的高低推断，仅供参考，不等同于正式 MBTI 测验结果。";
 
       return { type, explanation };
-    }
-
-    function clamp01(x) {
-      return Math.max(0, Math.min(1, x));
     }
 
     function inferGlobalPI(scores) {
@@ -604,14 +757,10 @@
       const E = scores.E.norm;
       const A = scores.A.norm;
 
-      // A（主导）：外向 + 低宜人（更敢坚持自己）
-      const a_pi = clamp01(0.6 * (1 - A) + 0.4 * E);
-      // B（外向）：直接用 E
-      const b_pi = clamp01(E);
-      // C（耐心）：近似用 C（尽责 + 节奏稳定）
-      const c_pi = clamp01(C);
-      // D（严谨）：高尽责 + 低开放（更偏传统和规矩）
-      const d_pi = clamp01(0.5 * C + 0.5 * (1 - O));
+      const a_pi = clamp(0.6 * (1 - A) + 0.4 * E, 0, 1);
+      const b_pi = clamp(E, 0, 1);
+      const c_pi = clamp(C, 0, 1);
+      const d_pi = clamp(0.5 * C + 0.5 * (1 - O), 0, 1);
 
       function levelLabel(v) {
         if (v < 0.35) return "偏低";
@@ -647,9 +796,120 @@
       };
     }
 
-    // =========================
-    // 5. 渲染结果 & 雷达图
-    // =========================
+    function inferGlobalColor(scores) {
+      const O = scores.O.norm;
+      const C = scores.C.norm;
+      const E = scores.E.norm;
+      const A = scores.A.norm;
+
+      const redScore = clamp(0.6 * E + 0.4 * (1 - A), 0, 1);
+      const yellowScore = clamp(O, 0, 1);
+      const greenScore = clamp(A, 0, 1);
+      const blueScore = clamp(C, 0, 1);
+
+      const arr = [
+        { key: "红色型", score: redScore },
+        { key: "黄色型", score: yellowScore },
+        { key: "绿色型", score: greenScore },
+        { key: "蓝色型", score: blueScore }
+      ];
+      arr.sort((a, b) => b.score - a.score);
+      const primary = arr[0];
+
+      let desc = "";
+      if (primary.key === "红色型") {
+        desc = "偏行动与主导，重结果和推进速度。";
+      } else if (primary.key === "黄色型") {
+        desc = "偏开放与创意，喜欢尝新和构想可能性。";
+      } else if (primary.key === "绿色型") {
+        desc = "较重视关系与合作，关注和谐与共赢。";
+      } else if (primary.key === "蓝色型") {
+        desc = "偏严谨与规则，关注细节、结构和稳定。";
+      }
+
+      return {
+        color: primary.key,
+        summary: "颜色心理学近似类型：" + primary.key + "（" + desc + "该推断基于大五轮廓的简单映射，仅供参考）。"
+      };
+    }
+
+    function inferGlobalPDP(pi) {
+      const A = pi.A;
+      const B = pi.B;
+      const C = pi.C;
+      const D = pi.D;
+
+      const tigerScore   = 0.5 * A + 0.3 * D + 0.2 * B - 0.2 * C;
+      const peacockScore = 0.5 * B + 0.3 * A - 0.2 * C - 0.1 * D;
+      const koalaScore   = 0.5 * C + 0.3 * (1 - A) + 0.2 * (1 - D);
+      const owlScore     = 0.5 * D + 0.3 * C + 0.2 * (1 - B);
+
+      const arr = [
+        { key: "老虎型", score: tigerScore },
+        { key: "孔雀型", score: peacockScore },
+        { key: "考拉型", score: koalaScore },
+        { key: "猫头鹰型", score: owlScore }
+      ];
+      arr.sort((a, b) => b.score - a.score);
+      const primary = arr[0];
+
+      let desc = "";
+      if (primary.key === "老虎型") {
+        desc = "偏目标导向和驱动力，重掌控和推进。";
+      } else if (primary.key === "孔雀型") {
+        desc = "偏表现与影响力，重社交和氛围。";
+      } else if (primary.key === "考拉型") {
+        desc = "偏温和与稳定，重关系和支持性。";
+      } else if (primary.key === "猫头鹰型") {
+        desc = "偏理性与严谨，重分析和准确性。";
+      }
+
+      return {
+        animal: primary.key,
+        summary: "PDP 动物近似类型：" + primary.key + "（" + desc + "该推断为基于近似 PI 轮廓的推演，不等同于正式 PDP 测评结果）。"
+      };
+    }
+
+    function buildBig5Narrative(scores) {
+      const order = ["O", "C", "E", "A", "N"];
+      const dimName = {
+        O: "开放性",
+        C: "尽责性",
+        E: "外向性",
+        A: "宜人性",
+        N: "情绪稳定性"
+      };
+
+      const sentences = [];
+      const abilities = [];
+
+      order.forEach(dim => {
+        const info = scores[dim];
+        const profile = profiles[dim][info.stage];
+
+        const s = "在" + dimName[dim] + "上，你更接近「" +
+          profile.stageLabel + "」的状态，表现为：" +
+          profile.big5Summary;
+        sentences.push(s);
+
+        abilities.push(...profile.abilitySummary);
+      });
+
+      const narrative =
+        "综合大五人格五个维度，你的整体画像大致为：" +
+        sentences.join("；") + "。";
+
+      const abilityText =
+        "从可发展能力角度看，目前较突出的能力关键词包括：" +
+        Array.from(new Set(abilities)).join("，") +
+        "（可作为后续成长与使用优势的着力点）。";
+
+      return { narrative, abilityText };
+    }
+
+    // =========================================================
+    // 6. 渲染结果 & 雷达图
+    // =========================================================
     let big5Chart = null;
 
     function renderResult(scores) {
@@ -657,19 +917,42 @@
       const content = document.getElementById("resultContent");
       content.innerHTML = "";
 
-      // 先显示容器，再绘制图表
       container.style.display = "block";
 
-      // --------- 全局类型推断块（MBTI + PI） ----------
+      // 大五整体画像
+      const big5Info = buildBig5Narrative(scores);
+      const big5Block = document.createElement("div");
+      big5Block.className = "section-block";
+
+      const big5Title = document.createElement("div");
+      big5Title.className = "section-title";
+      big5Title.textContent = "大五整体画像（人格 + 能力）";
+      big5Block.appendChild(big5Title);
+
+      const p1 = document.createElement("div");
+      p1.className = "small";
+      p1.textContent = big5Info.narrative;
+      big5Block.appendChild(p1);
+
+      const p2 = document.createElement("div");
+      p2.className = "small";
+      p2.textContent = big5Info.abilityText;
+      big5Block.appendChild(p2);
+
+      content.appendChild(big5Block);
+
+      // 全局类型推断
       const globalMBTI = inferGlobalMBTI(scores);
       const globalPI = inferGlobalPI(scores);
+      const globalColor = inferGlobalColor(scores);
+      const globalPDP = inferGlobalPDP(globalPI);
 
       const globalBlock = document.createElement("div");
-      globalBlock.className = "dim-block";
+      globalBlock.className = "section-block";
 
       const globalTitle = document.createElement("div");
-      globalTitle.className = "result-title";
-      globalTitle.textContent = "全局类型推断（仅供参考）";
+      globalTitle.className = "section-title";
+      globalTitle.textContent = "全局类型推断（MBTI / PI / 颜色 / PDP，仅供参考）";
       globalBlock.appendChild(globalTitle);
 
       const mbtiLine = document.createElement("div");
@@ -683,40 +966,24 @@
       piLine.textContent = "PI 近似轮廓：" + globalPI.summary;
       globalBlock.appendChild(piLine);
 
+      const colorLine = document.createElement("div");
+      colorLine.className = "small";
+      colorLine.textContent = globalColor.summary;
+      globalBlock.appendChild(colorLine);
+
+      const pdpLine = document.createElement("div");
+      pdpLine.className = "small";
+      pdpLine.textContent = globalPDP.summary;
+      globalBlock.appendChild(pdpLine);
+
       content.appendChild(globalBlock);
 
-      // --------- 中部：大五维度 + 能力说明 ----------
-      ["O", "C", "E", "A", "N"].forEach(dim => {
-        const info = scores[dim];
-        const profile = profiles[dim][info.stage];
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "dim-block";
-
-        const title = document.createElement("div");
-        title.className = "result-title";
-        title.textContent = dimensionMeta[dim].name + "：" + profile.stageLabel;
-        wrapper.appendChild(title);
-
-        const p1 = document.createElement("div");
-        p1.className = "small";
-        p1.textContent = "说明：" + profile.big5Summary;
-        wrapper.appendChild(p1);
-
-        const p2 = document.createElement("div");
-        p2.className = "small";
-        p2.textContent = "能力关键词：" + profile.abilitySummary.join("，");
-        wrapper.appendChild(p2);
-
-        content.appendChild(wrapper);
-      });
-
-      // --------- 底部扩展说明：MBTI / PI / 颜色 / PDP ----------
+      // 维度级扩展说明
       const extra = document.createElement("div");
       extra.className = "extra-block";
 
       const extraTitle = document.createElement("div");
-      extraTitle.className = "result-title";
+      extraTitle.className = "section-title";
       extraTitle.textContent = "维度级扩展说明（MBTI / PI / 颜色心理学 / PDP 映射）";
       extra.appendChild(extraTitle);
 
@@ -783,9 +1050,9 @@
       container.scrollIntoView({ behavior: "smooth" });
     }
 
-    // =========================
-    // 6. 绑定事件（含“只允许提交一次” + 数量限制）
-    // =========================
+    // =========================================================
+    // 7. 事件绑定：分页导航 + 一次性提交 + 数量限制
+    // =========================================================
     renderForm();
 
     document.getElementById("prevBtn").addEventListener("click", () => {
@@ -804,28 +1071,30 @@
       if (currentPage < totalPages - 1) {
         showPage(currentPage + 1);
       } else {
-        // 最后一页：先检查勾选数量
         const checkedCount = document.querySelectorAll(
           '#traitForm input[type="checkbox"]:checked'
         ).length;
 
         if (checkedCount < MIN_SELECTED) {
-          alert("当前选择的词语过少（" + checkedCount +
+          alert(
+            "当前选择的词语过少（" + checkedCount +
             " 个），请至少选择 " + MIN_SELECTED +
-            " 个更符合自己的描述，再提交。");
+            " 个更符合自己的描述，再提交。"
+          );
           return;
         }
         if (checkedCount > MAX_SELECTED) {
-          alert("当前选择的词语过多（" + checkedCount +
+          alert(
+            "当前选择的词语过多（" + checkedCount +
             " 个），建议只勾选最符合自己的描述，不要超过 " +
-            MAX_SELECTED + " 个。");
+            MAX_SELECTED + " 个。"
+          );
           return;
         }
 
         const scores = computeScores();
         renderResult(scores);
         hasSubmitted = true;
-        // 提交后禁用按钮，防止重复计算和修改
         document.getElementById("prevBtn").disabled = true;
         document.getElementById("nextBtn").disabled = true;
         document.getElementById("nextBtn").textContent = "已提交";
