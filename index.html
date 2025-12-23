@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>大五人格选词测评（多维权重版原型）</title>
+  <title>大五人格选词测评（中性正向版原型）</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
@@ -129,17 +129,17 @@
       }
     }
   </style>
-  <!-- Chart.js 用于雷达图 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
-    <!-- 问卷卡片（分页向导） -->
+    <!-- 问卷：分页选词 -->
     <div class="card">
-      <div class="title">大五人格选词测评（多维权重版原型）</div>
+      <div class="title">大五人格选词测评（中性正向版原型）</div>
       <div class="subtitle">
         请从下面的词语中勾选「比较像我」的描述（可以多选，也可以一条都不选）。<br>
-        词语顺序已随机打乱，不显示属于哪个维度。当前版本用于自我觉察和方法验证，不用于招聘淘汰或临床诊断。
+        词语都是中性或偏正向的表达，用来捕捉你的偏好和风格，而不是评判好坏。<br>
+        顺序已随机打乱，不标出属于哪个维度。当前版本用于自我觉察和方法原型验证。
       </div>
 
       <form id="traitForm" onsubmit="return false;">
@@ -159,7 +159,7 @@
     <div id="resultContainer" class="card" style="display:none;">
       <div class="title">测评结果</div>
       <div class="subtitle">
-        雷达图数值范围为 0–1，越接近 1 表示该维度偏高。中部为大五整体画像与能力关键词，其后是全局类型推断（MBTI / PI / 颜色 / PDP，仅供参考），最底部为维度级扩展说明。
+        雷达图数值范围为 0–1，越接近 1 表示该维度偏高。中部为大五整体画像与能力关键词，其后是全局类型推断（MBTI / PI / 颜色 / PDP，仅供参考），最底部是维度级扩展说明。
       </div>
       <div style="margin-bottom:16px; text-align:center;">
         <canvas id="big5Chart" width="320" height="220"></canvas>
@@ -169,222 +169,271 @@
   </div>
 
   <script>
-    // ====== 参数：最少 / 最多可选条目数 ======
-    const MIN_SELECTED = 10;   // 至少选择 10 个词
-    const MAX_SELECTED = 30;   // 最多选择 30 个，避免“全都像我”
+    // 选择数量限制
+    const MIN_SELECTED = 10;
+    const MAX_SELECTED = 35;
 
-    // =========================================================
-    // 1. 条目库：每个词对 O/C/E/A/N 五个维度都有一个权重（-1 ~ +1）
-    // =========================================================
+    // ===== 1. 词汇表：参考你提供的中性正向词汇思路，前 50 个做原型 =====
+    // 每个词：label 日常化说明，weights 为在 O/C/E/A/N 上的权重（-1~+1）
     const traits = [
-      // --- O：开放性相关 ---
+      // ===== 第一组：动力与主张（偏 E+/A-，带一点 C+）=====
       {
         id: "t1",
-        label: "对新鲜事物保持强烈好奇，愿意主动探索（Curious & exploratory）",
-        weights: { O: 0.7, C: 0.1, E: 0.2, A: 0.0, N: 0.1 }
+        label: "好胜的（喜欢赢，有竞争心）",
+        weights: { O: 0.0, C: 0.3, E: 0.4, A: -0.6, N: 0.0 }
       },
       {
         id: "t2",
-        label: "更喜欢按照既有经验和流程来做事（Prefer familiar routines）",
-        weights: { O: -0.6, C: 0.4, E: 0.0, A: 0.0, N: 0.1 }
+        label: "坚定的（表达有主见，不容易被带偏）",
+        weights: { O: 0.0, C: 0.0, E: 0.7, A: -0.2, N: -0.3 }
       },
       {
         id: "t3",
-        label: "容易联想到抽象概念或大图景，而不是具体细节（Big-picture oriented）",
-        weights: { O: 0.7, C: -0.2, E: 0.1, A: 0.0, N: 0.0 }
+        label: "直率的（说话比较直接，少拐弯抹角）",
+        weights: { O: 0.2, C: 0.0, E: 0.3, A: -0.5, N: 0.0 }
       },
       {
         id: "t4",
-        label: "偏好具体、可见、可操作的事情，而不是抽象讨论（Concrete focused）",
-        weights: { O: -0.6, C: 0.2, E: 0.0, A: 0.0, N: 0.0 }
+        label: "有野心的（对成绩和目标期望值高）",
+        weights: { O: 0.0, C: 0.6, E: 0.4, A: -0.2, N: 0.0 }
       },
       {
         id: "t5",
-        label: "愿意尝试非传统或少有人走的路径（Non-conventional）",
-        weights: { O: 0.7, C: -0.2, E: 0.2, A: 0.0, N: 0.0 }
+        label: "敢言的（敢说出真实想法）",
+        weights: { O: 0.3, C: 0.0, E: 0.6, A: -0.3, N: 0.0 }
       },
       {
         id: "t6",
-        label: "做决定时更看重安全感和可控性（Safety-oriented）",
-        weights: { O: -0.4, C: 0.4, E: 0.0, A: 0.0, N: 0.2 }
+        label: "独立的（习惯自己做决定，自己扛事）",
+        weights: { O: 0.4, C: 0.0, E: -0.2, A: -0.3, N: 0.0 }
       },
       {
         id: "t7",
-        label: "经常提出改进或创新的想法（Idea generator）",
-        weights: { O: 0.7, C: 0.1, E: 0.2, A: 0.0, N: 0.0 }
+        label: "严格的（对标准和要求比较高）",
+        weights: { O: 0.0, C: 0.5, E: 0.0, A: -0.5, N: 0.0 }
       },
       {
         id: "t8",
-        label: "更愿意把成熟方案执行到位，而不是重新设计（Executor of existing plans）",
-        weights: { O: -0.5, C: 0.6, E: 0.0, A: 0.0, N: 0.1 }
+        label: "有怀疑精神的（习惯多问几个“为什么”）",
+        weights: { O: 0.4, C: 0.2, E: 0.0, A: -0.4, N: 0.0 }
       },
-
-      // --- C：尽责性相关 ---
       {
         id: "t9",
-        label: "做事喜欢提前规划，有清单或日程安排（Planner）",
-        weights: { O: 0.1, C: 0.7, E: 0.0, A: 0.0, N: 0.2 }
+        label: "喜欢掌控局面的（自然带节奏、带头）",
+        weights: { O: 0.0, C: 0.0, E: 0.8, A: -0.4, N: 0.0 }
       },
       {
         id: "t10",
-        label: "经常临近截止日期才开始行动（Deadline driven）",
-        weights: { O: 0.2, C: -0.7, E: 0.1, A: 0.0, N: -0.1 }
+        label: "务实的（更关注现实和落地效果）",
+        weights: { O: -0.5, C: 0.4, E: 0.0, A: 0.0, N: 0.0 }
       },
+
+      // ===== 第二组：灵活与自由（偏 C- / O+）=====
       {
         id: "t11",
-        label: "更在意把事情做“对”，而不仅仅是做完（Quality focused）",
-        weights: { O: 0.1, C: 0.7, E: 0.0, A: 0.0, N: 0.1 }
+        label: "随性的（不太爱被严格时间表束缚）",
+        weights: { O: 0.3, C: -0.6, E: 0.4, A: 0.0, N: 0.0 }
       },
       {
         id: "t12",
-        label: "容易同时开很多任务，推进节奏较随性（Multi-task & flexible）",
-        weights: { O: 0.3, C: -0.6, E: 0.1, A: 0.0, N: 0.0 }
+        label: "灵活的（遇事容易变通，少死磕）",
+        weights: { O: 0.3, C: -0.4, E: 0.0, A: 0.3, N: 0.0 }
       },
       {
         id: "t13",
-        label: "愿意为目标长期投入和坚持（Persistent）",
-        weights: { O: 0.0, C: 0.7, E: 0.0, A: 0.1, N: 0.2 }
+        label: "即兴的（很多时候喜欢临场发挥）",
+        weights: { O: 0.5, C: -0.5, E: 0.0, A: 0.0, N: 0.0 }
       },
       {
         id: "t14",
-        label: "对规则和流程有自己的理解，并不总是严格遵守（Rule-bending）",
-        weights: { O: 0.3, C: -0.6, E: 0.1, A: 0.0, N: 0.0 }
+        label: "悠闲的（节奏感偏慢，不喜欢太紧绷）",
+        weights: { O: 0.0, C: -0.7, E: 0.0, A: 0.0, N: -0.3 }
       },
       {
         id: "t15",
-        label: "做事比较注重细节，习惯反复检查（Detail-oriented）",
-        weights: { O: -0.1, C: 0.7, E: 0.0, A: 0.0, N: 0.1 }
+        label: "享受当下的（比较重视当下的舒适和快乐）",
+        weights: { O: 0.0, C: -0.5, E: 0.4, A: 0.0, N: 0.0 }
       },
       {
         id: "t16",
-        label: "更愿意先动起来，再边做边调整（Action before structure）",
-        weights: { O: 0.3, C: -0.6, E: 0.2, A: 0.0, N: 0.0 }
+        label: "不太按套路来的（不太喜欢照传统方式办事）",
+        weights: { O: 0.7, C: -0.3, E: 0.0, A: 0.0, N: 0.0 }
       },
-
-      // --- E：外向性相关 ---
       {
         id: "t17",
-        label: "从人群和互动中恢复能量（Energized by people）",
-        weights: { O: 0.1, C: 0.0, E: 0.7, A: 0.1, N: 0.1 }
+        label: "爱幻想的（脑子里经常会冒出各种点子和画面）",
+        weights: { O: 0.6, C: -0.4, E: 0.0, A: 0.0, N: 0.0 }
       },
       {
         id: "t18",
-        label: "更喜欢安静、独处的时间来思考或充电（Energized by solitude）",
-        weights: { O: 0.2, C: 0.0, E: -0.7, A: 0.0, N: 0.2 }
+        label: "随和的（比较好说话，不太跟人计较）",
+        weights: { O: 0.0, C: -0.3, E: 0.0, A: 0.5, N: -0.4 }
       },
       {
         id: "t19",
-        label: "在陌生场合也能较自然地主动开口（Socially proactive）",
-        weights: { O: 0.1, C: 0.0, E: 0.7, A: 0.0, N: 0.0 }
+        label: "多变的（兴趣和状态变化比较快）",
+        weights: { O: 0.4, C: -0.4, E: 0.0, A: 0.0, N: 0.2 }
       },
       {
         id: "t20",
-        label: "不太喜欢成为众人关注的焦点（Prefer low profile）",
-        weights: { O: 0.0, C: 0.0, E: -0.6, A: 0.0, N: 0.1 }
+        label: "大胆尝试的（喜欢试一些新鲜或有挑战的事情）",
+        weights: { O: 0.4, C: -0.2, E: 0.5, A: 0.0, N: 0.0 }
       },
+
+      // ===== 第三组：敏感与深度（偏 N+ / O+）=====
       {
         id: "t21",
-        label: "表达比较顺畅，面对多人说话压力不大（Comfortable speaking to groups）",
-        weights: { O: 0.0, C: 0.0, E: 0.7, A: 0.0, N: 0.1 }
+        label: "敏感细腻的（对情绪和气氛很有感觉）",
+        weights: { O: 0.3, C: 0.0, E: 0.0, A: 0.2, N: 0.6 }
       },
       {
         id: "t22",
-        label: "更倾向通过文字、书面方式沟通（Prefer written communication）",
-        weights: { O: 0.1, C: 0.1, E: -0.6, A: 0.0, N: 0.1 }
+        label: "感性丰富的（容易被故事、音乐等打动）",
+        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.3, N: 0.7 }
       },
       {
         id: "t23",
-        label: "在团队中自然承担带动气氛或组织活动的角色（Informal leader in groups）",
-        weights: { O: 0.1, C: 0.1, E: 0.7, A: 0.0, N: 0.0 }
+        label: "情感热烈的（喜欢真情实感，不太淡漠）",
+        weights: { O: 0.3, C: 0.0, E: 0.4, A: 0.0, N: 0.5 }
       },
       {
         id: "t24",
-        label: "更习惯深度一对一交流，而不是大范围社交（Prefers 1-to-1 talks）",
-        weights: { O: 0.2, C: 0.0, E: -0.5, A: 0.2, N: 0.1 }
+        label: "喜欢自我反思的（常常回看自己的想法和行为）",
+        weights: { O: 0.3, C: 0.0, E: -0.5, A: 0.0, N: 0.3 }
       },
-
-      // --- A：宜人性相关 ---
       {
         id: "t25",
-        label: "做决定时会主动考虑他人的感受和利益（Considerate of others）",
-        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.7, N: 0.1 }
+        label: "警觉细致的（对风险和细节比较敏感）",
+        weights: { O: 0.0, C: 0.3, E: 0.0, A: 0.0, N: 0.5 }
       },
       {
         id: "t26",
-        label: "更倾向于坚持原则和立场，即便有人不高兴（Principle-first）",
-        weights: { O: 0.0, C: 0.2, E: 0.1, A: -0.6, N: 0.0 }
+        label: "追求完美的（对结果要求比较高）",
+        weights: { O: 0.0, C: 0.5, E: 0.0, A: 0.0, N: 0.4 }
       },
       {
         id: "t27",
-        label: "冲突出现时，会先尝试缓和和协调（Conflict-softening）",
-        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.7, N: 0.1 }
+        label: "有点怀旧的（容易记住过去的细节和感受）",
+        weights: { O: 0.2, C: 0.0, E: 0.0, A: 0.2, N: 0.3 }
       },
       {
         id: "t28",
-        label: "在讨论中更在意观点是否正确，而不是气氛是否融洽（Fact-focused）",
-        weights: { O: 0.1, C: 0.1, E: 0.0, A: -0.6, N: 0.0 }
+        label: "谨慎周全的（做事时多想几步）",
+        weights: { O: -0.3, C: 0.3, E: 0.0, A: 0.0, N: 0.4 }
       },
       {
         id: "t29",
-        label: "比较容易体会到他人的处境和感受（Empathic）",
-        weights: { O: 0.1, C: 0.0, E: 0.0, A: 0.7, N: 0.1 }
+        label: "内心世界比较丰富的（想法很多，不一定都说出来）",
+        weights: { O: 0.6, C: 0.0, E: 0.0, A: 0.0, N: 0.3 }
       },
       {
         id: "t30",
-        label: "对他人的动机和承诺会保持一定怀疑（Skeptical of motives）",
-        weights: { O: 0.1, C: 0.1, E: 0.0, A: -0.7, N: -0.1 }
+        label: "谦逊低调的（不太喜欢过多夸耀自己）",
+        weights: { O: 0.0, C: 0.0, E: -0.3, A: 0.5, N: 0.2 }
       },
+
+      // ===== 第四组：社交与活力（偏 E+ / A+）=====
       {
         id: "t31",
-        label: "倾向寻找双赢方案，让各方都尽量满意（Win-win oriented）",
-        weights: { O: 0.1, C: 0.1, E: 0.0, A: 0.7, N: 0.1 }
+        label: "有个人魅力的（在人群中容易被注意到）",
+        weights: { O: 0.3, C: 0.0, E: 0.7, A: 0.0, N: 0.0 }
       },
       {
         id: "t32",
-        label: "在谈合作或分配资源时，会比较主动争取自己的一侧（Self-advocating）",
-        weights: { O: 0.0, C: 0.1, E: 0.1, A: -0.6, N: 0.0 }
+        label: "健谈的（话比较多，容易打开话题）",
+        weights: { O: 0.0, C: -0.1, E: 0.8, A: 0.0, N: 0.0 }
       },
-
-      // --- N：情绪稳定性相关（高 N = 稳定，低 N = 敏感） ---
       {
         id: "t33",
-        label: "压力下通常也能保持相对冷静（Calm under pressure）",
-        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.0, N: 0.7 }
+        label: "热情的（待人接物比较有温度）",
+        weights: { O: 0.0, C: 0.0, E: 0.4, A: 0.7, N: 0.0 }
       },
       {
         id: "t34",
-        label: "遇到不确定或变化时，容易紧张或反复担心（Anxious about uncertainty）",
-        weights: { O: -0.1, C: 0.1, E: 0.0, A: 0.0, N: -0.7 }
+        label: "乐于助人的（看到别人需要时愿意伸手）",
+        weights: { O: 0.0, C: 0.2, E: 0.0, A: 0.8, N: 0.0 }
       },
       {
         id: "t35",
-        label: "情绪起伏不大，很少出现极端情绪（Emotionally even）",
-        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.0, N: 0.7 }
+        label: "精力充沛的（一天安排很多事情也能撑得住）",
+        weights: { O: 0.0, C: 0.3, E: 0.7, A: 0.0, N: -0.2 }
       },
       {
         id: "t36",
-        label: "受到负面反馈时，会在心里反复咀嚼很久（Ruminates on criticism）",
-        weights: { O: 0.1, C: 0.0, E: 0.0, A: 0.0, N: -0.7 }
+        label: "有趣的（经常能让气氛不无聊）",
+        weights: { O: 0.3, C: 0.0, E: 0.6, A: 0.0, N: 0.0 }
       },
       {
         id: "t37",
-        label: "遇到困难时，比较容易重新振作并寻找办法（Resilient）",
-        weights: { O: 0.1, C: 0.2, E: 0.0, A: 0.0, N: 0.7 }
+        label: "有说服力的（讲道理时别人容易被你带动）",
+        weights: { O: 0.0, C: 0.3, E: 0.5, A: -0.1, N: 0.0 }
       },
       {
         id: "t38",
-        label: "在压力大或节奏快的时候，睡眠或情绪容易受影响（Stress-sensitive）",
-        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.0, N: -0.7 }
+        label: "善于交际的（比较容易与不同类型的人打成一片）",
+        weights: { O: 0.0, C: 0.0, E: 0.8, A: 0.3, N: 0.0 }
       },
       {
         id: "t39",
-        label: "能较快从挫折中抽离出来，回到日常节奏（Quick recovery）",
-        weights: { O: 0.0, C: 0.1, E: 0.0, A: 0.0, N: 0.7 }
+        label: "比较阳光的（整体情绪偏乐观、开朗）",
+        weights: { O: 0.0, C: 0.0, E: 0.5, A: 0.3, N: -0.4 }
       },
       {
         id: "t40",
-        label: "对潜在风险或最坏情况经常有比较多设想（Vivid worst-case imagination）",
-        weights: { O: 0.2, C: 0.0, E: 0.0, A: 0.0, N: -0.7 }
+        label: "宽容的（对他人的不同和失误比较能接受）",
+        weights: { O: 0.3, C: 0.0, E: 0.0, A: 0.7, N: 0.0 }
+      },
+
+      // ===== 第五组：稳重与传统（偏 C+ / O- / N-）=====
+      {
+        id: "t41",
+        label: "比较传统的（对稳定和熟悉的方式更有安全感）",
+        weights: { O: -0.7, C: 0.4, E: 0.0, A: 0.2, N: 0.0 }
+      },
+      {
+        id: "t42",
+        label: "有条理的（做事前后比较有秩序）",
+        weights: { O: -0.1, C: 0.8, E: 0.0, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t43",
+        label: "一贯稳定的（做事风格变化不大）",
+        weights: { O: 0.0, C: 0.6, E: 0.0, A: 0.0, N: -0.3 }
+      },
+      {
+        id: "t44",
+        label: "现实务实的（更看重现实可行性）",
+        weights: { O: -0.5, C: 0.3, E: 0.0, A: 0.0, N: -0.3 }
+      },
+      {
+        id: "t45",
+        label: "遇事冷静的（不太容易情绪失控）",
+        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.3, N: -0.8 }
+      },
+      {
+        id: "t46",
+        label: "按部就班的（喜欢按步骤和流程来推进）",
+        weights: { O: -0.3, C: 0.7, E: 0.0, A: 0.0, N: 0.0 }
+      },
+      {
+        id: "t47",
+        label: "有原则的（有自己的底线和标准）",
+        weights: { O: 0.0, C: 0.6, E: 0.0, A: -0.2, N: 0.0 }
+      },
+      {
+        id: "t48",
+        label: "知足踏实的（不太强求什么都要再更进一步）",
+        weights: { O: 0.0, C: -0.2, E: 0.0, A: 0.0, N: -0.6 }
+      },
+      {
+        id: "t49",
+        label: "行事稳健的（不太冲动，比较看重安全）",
+        weights: { O: 0.0, C: 0.4, E: 0.0, A: 0.0, N: -0.6 }
+      },
+      {
+        id: "t50",
+        label: "偏常规的（更偏好常见做法，而不是猎奇）",
+        weights: { O: -0.6, C: 0.3, E: 0.0, A: 0.3, N: 0.0 }
       }
     ];
 
@@ -396,9 +445,7 @@
       N: { name: "情绪稳定性 N" } // 高 N = 稳定；低 N = 敏感
     };
 
-    // =========================================================
-    // 2. 分档解释配置（沿用你之前的 O/C/E/A/N 四档框架）
-    // =========================================================
+    // ===== 2. 四档解释：沿用你之前的 O/C/E/A/N 发展阶梯 =====
     const profiles = {
       O: {
         1: {
@@ -592,9 +639,7 @@
       }
     };
 
-    // =========================================================
-    // 3. 工具：打乱、分页
-    // =========================================================
+    // ===== 3. 工具函数：打乱、分页 =====
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -602,7 +647,7 @@
       }
     }
 
-    const PAGE_COUNT = 6; // 固定 6 页
+    const PAGE_COUNT = 6;
     let currentPage = 0;
     let totalPages = PAGE_COUNT;
     let hasSubmitted = false;
@@ -676,10 +721,7 @@
       }
     }
 
-    // =========================================================
-    // 4. 计算得分：多维权重算法
-    //    每个条目是一个五维向量，先对每维求加权和，再按该维最大可能值归一化到 [-1,1]，再转 [0,1]
-    // =========================================================
+    // ===== 4. 计算得分：只在“已选条目”上归一化的多维权重算法 =====
     function clamp(x, min, max) {
       return Math.max(min, Math.min(max, x));
     }
@@ -687,52 +729,64 @@
     function computeScores() {
       const dims = ["O", "C", "E", "A", "N"];
       const result = {};
-      const maxAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
       const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+      const selectedAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+      const totalAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
 
-      // 理论最大绝对值：所有条目的 |w| 之和
+      // 所有条目理论绝对值总和（用于 coverage）
       traits.forEach(tr => {
         dims.forEach(d => {
           const w = (tr.weights && typeof tr.weights[d] === "number") ? tr.weights[d] : 0;
-          maxAbs[d] += Math.abs(w);
+          totalAbs[d] += Math.abs(w);
         });
       });
 
-      // 用户实际选择：对每个维度累加对应权重
+      // 已选条目 raw 和 selectedAbs
       traits.forEach(tr => {
         const checked = document.getElementById(tr.id).checked;
         if (!checked) return;
         dims.forEach(d => {
           const w = (tr.weights && typeof tr.weights[d] === "number") ? tr.weights[d] : 0;
-          raw[d] += w;
+          const aw = Math.abs(w);
+          if (aw > 0) {
+            raw[d] += w;
+            selectedAbs[d] += aw;
+          }
         });
       });
 
-      // 归一化 & 分档
+      // 归一化 + 分档
       dims.forEach(d => {
-        const maxVal = maxAbs[d] || 1; // 防止除 0
-        let normSigned = raw[d] / maxVal;    // [-1,1]
-        normSigned = clamp(normSigned, -1, 1);
-        const norm01 = (normSigned + 1) / 2; // 映射到 [0,1]
+        const sel = selectedAbs[d];
+        let norm01;
+        if (sel === 0) {
+          // 没有任何与该维相关的词被选中 → 暂视为 0.5 中性，并在需要时可用 coverage 标记信息不足
+          norm01 = 0.5;
+        } else {
+          let normSigned = raw[d] / sel;   // [-1,1]
+          normSigned = clamp(normSigned, -1, 1);
+          norm01 = (normSigned + 1) / 2;   // [0,1]
+        }
 
         let stage = 1;
         if (norm01 >= 0.65) stage = 4;
         else if (norm01 >= 0.5) stage = 3;
         else if (norm01 >= 0.35) stage = 2;
 
+        const coverage = totalAbs[d] === 0 ? 0 : (sel / totalAbs[d]);
+
         result[d] = {
           raw: raw[d],
           norm: norm01,
-          stage: stage
+          stage: stage,
+          coverage: coverage
         };
       });
 
       return result;
     }
 
-    // =========================================================
-    // 5. 全局 MBTI / PI / 颜色 / PDP 推断 + 大五整体自然语言叙述
-    // =========================================================
+    // ===== 5. 全局 MBTI / PI / 颜色 / PDP 推断 + 大五整体文本 =====
     function inferGlobalMBTI(scores) {
       const O = scores.O.norm;
       const C = scores.C.norm;
@@ -870,63 +924,50 @@
       };
     }
 
-function buildBig5Narrative(scores) {
-  const order = ["O", "C", "E", "A", "N"];
+    function buildBig5Narrative(scores) {
+      const order = ["O", "C", "E", "A", "N"];
+      const summaries = [];
+      const abilities = [];
 
-  const summaries = [];
-  const abilities = [];
+      order.forEach(dim => {
+        const info = scores[dim];
+        const profile = profiles[dim][info.stage];
 
-  order.forEach(dim => {
-    const info = scores[dim];
-    const profile = profiles[dim][info.stage];
+        let s = profile.big5Summary || "";
+        s = s.replace(/。$/u, "");
+        summaries.push(s);
 
-    // 只取「表现为：……」这句，不再重复“在开放性上，你更接近……”
-    // 这里直接使用 profile.big5Summary，必要时去掉末尾句号再统一加。
-    let s = profile.big5Summary || "";
-    s = s.replace(/。$/u, ""); // 去掉末尾的全角句号，避免重复
-    summaries.push(s);
+        if (Array.isArray(profile.abilitySummary)) {
+          abilities.push(...profile.abilitySummary);
+        }
+      });
 
-    // 能力关键词累积去重
-    if (Array.isArray(profile.abilitySummary)) {
-      abilities.push(...profile.abilitySummary);
+      const numberedLines = summaries.map((text, idx) => {
+        return (idx + 1) + "．" + text + "。";
+      });
+
+      const narrative =
+        "你的整体画像大致为：\n" +
+        numberedLines.join("\n");
+
+      const uniqueAbilities = Array.from(new Set(abilities));
+      const abilityText =
+        "您目前较突出的能力关键词包括：" +
+        uniqueAbilities.join("，") +
+        "（可作为后续成长与使用优势的着力点）。";
+
+      return { narrative, abilityText };
     }
-  });
 
-  // 1. 你的整体画像大致为：按 1~5 编号列出五个维度的性格描述
-  const numberedLines = summaries.map((text, idx) => {
-    // 1.主动接触新信息和方法，对不确定性有一定容忍度。
-    return (idx + 1) + "．" + text + "。";
-  });
-
-  // 使用换行符，让结构更清晰；浏览器会把换行压成空格显示，但复制文本时结构是清晰的
-  const narrative =
-    "你的整体画像大致为：\n" +
-    numberedLines.join("\n");
-
-  // 2. 能力关键词一句话概括（用「您目前较突出的能力关键词包括：」）
-  const uniqueAbilities = Array.from(new Set(abilities));
-  const abilityText =
-    "您目前较突出的能力关键词包括：" +
-    uniqueAbilities.join("，") +
-    "（可作为后续成长与使用优势的着力点）。";
-
-  return { narrative, abilityText };
-}
-
-
-    // =========================================================
-    // 6. 渲染结果 & 雷达图
-    // =========================================================
+    // ===== 6. 渲染结果 & 雷达图 =====
     let big5Chart = null;
 
     function renderResult(scores) {
       const container = document.getElementById("resultContainer");
       const content = document.getElementById("resultContent");
       content.innerHTML = "";
-
       container.style.display = "block";
 
-      // 大五整体画像
       const big5Info = buildBig5Narrative(scores);
       const big5Block = document.createElement("div");
       big5Block.className = "section-block";
@@ -948,7 +989,6 @@ function buildBig5Narrative(scores) {
 
       content.appendChild(big5Block);
 
-      // 全局类型推断
       const globalMBTI = inferGlobalMBTI(scores);
       const globalPI = inferGlobalPI(scores);
       const globalColor = inferGlobalColor(scores);
@@ -985,7 +1025,6 @@ function buildBig5Narrative(scores) {
 
       content.appendChild(globalBlock);
 
-      // 维度级扩展说明
       const extra = document.createElement("div");
       extra.className = "extra-block";
 
@@ -1011,7 +1050,6 @@ function buildBig5Narrative(scores) {
 
       content.appendChild(extra);
 
-      // 雷达图
       const ctx = document.getElementById("big5Chart").getContext("2d");
       const labels = ["开放性 O", "尽责性 C", "外向性 E", "宜人性 A", "情绪稳定性 N"];
       const data = ["O", "C", "E", "A", "N"].map(dim => scores[dim].norm);
@@ -1057,9 +1095,7 @@ function buildBig5Narrative(scores) {
       container.scrollIntoView({ behavior: "smooth" });
     }
 
-    // =========================================================
-    // 7. 事件绑定：分页导航 + 一次性提交 + 数量限制
-    // =========================================================
+    // ===== 7. 导航与提交（一次测评，不重复计算）=====
     renderForm();
 
     document.getElementById("prevBtn").addEventListener("click", () => {
