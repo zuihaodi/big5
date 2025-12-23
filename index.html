@@ -2,1147 +2,1447 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>大五人格选词测评（中性正向版原型）</title>
+  <title>人格选词测评</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background: #f3f4f6;
-      margin: 0;
-      font-size: 14px;
-    }
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 24px 16px 40px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px 20px 24px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-      margin-bottom: 20px;
-    }
-    .title {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .subtitle {
-      font-size: 13px;
-      color: #4b5563;
-      margin-bottom: 12px;
-      line-height: 1.6;
-    }
-    .small {
-      font-size: 12px;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-    .trait-page {
-      display: none;
-      margin-top: 8px;
-    }
-    .trait-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 24px;
-    }
-    .trait-item {
-      width: 45%;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    .trait-item input {
-      margin-right: 6px;
-    }
-    .nav-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 14px;
-    }
-    .btn {
-      padding: 9px 18px;
-      border: none;
-      border-radius: 999px;
-      background: #2563eb;
-      color: #fff;
-      font-size: 14px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    .btn:disabled {
-      background: #9ca3af;
-      cursor: default;
-    }
-    .btn:hover:not(:disabled) {
-      background: #1d4ed8;
-    }
-    .section-block {
-      border-bottom: 1px solid #e5e7eb;
-      padding: 8px 0 10px;
-    }
-    .section-block:last-child {
-      border-bottom: none;
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .extra-block {
-      border-top: 1px solid #e5e7eb;
-      margin-top: 10px;
-      padding-top: 10px;
-    }
-    canvas {
-      max-width: 320px;
-      height: 220px;
-      display: block;
-      margin: 0 auto;
+    :root {
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --bg: #f4f5fb;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-sub: #4b5563;
+      --border-soft: #e5e7eb;
+      --danger: #b91c1c;
+      --warning: #d97706;
+      --success: #047857;
     }
 
-    /* 手机自适应：字体稍大，选项单列 */
-    @media (max-width: 640px) {
-      body {
-        font-size: 15px;
-      }
-      .container {
-        padding: 16px 10px 28px;
-      }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, -system-ui,
+        "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top left, #e0f2fe, #eef2ff 35%, #f9fafb 70%);
+      color: var(--text-main);
+    }
+
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 960px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow:
+        0 18px 45px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(148, 163, 184, 0.2);
+      padding: 24px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .header {
+      border-bottom: 1px solid var(--border-soft);
+      padding-bottom: 12px;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .subtitle strong {
+      color: var(--primary);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.1fr);
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .left-panel, .right-panel {
+      background: #f9fafb;
+      border-radius: 16px;
+      padding: 14px 14px 16px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .step-indicator {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .traits-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .trait-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid transparent;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .trait-item:hover {
+      border-color: var(--primary-soft);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.25);
+    }
+
+    .trait-item input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .trait-label {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .trait-label-main {
+      font-weight: 500;
+      color: #111827;
+    }
+
+    .trait-label-sub {
+      display: block;
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      gap: 8px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .nav-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.45);
+      transform: translateY(-0.5px);
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-sub);
+      padding-inline: 10px;
+    }
+
+    button:disabled {
+      background: #e5e7eb !important;
+      color: #9ca3af !important;
+      box-shadow: none !important;
+      cursor: default;
+      transform: none !important;
+    }
+
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-block {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .result-block h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    .result-block p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .tag-line {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .dim-list {
+      margin: 4px 0 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      margin-left: 6px;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .radar-wrapper {
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+      padding: 6px 4px 2px;
+    }
+
+    #radarChart {
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    @media (max-width: 900px) {
       .card {
-        padding: 16px 14px 20px;
+        padding: 18px 16px 20px;
+        border-radius: 0;
+        box-shadow: none;
       }
+
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .left-panel, .right-panel {
+        padding: 10px 10px 12px;
+      }
+
       .title {
-        font-size: 18px;
+        font-size: 20px;
       }
+
       .subtitle {
         font-size: 13px;
       }
-      .small {
+
+      .trait-item {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+
+      .trait-label-sub {
         font-size: 12px;
       }
-      .trait-item {
+
+      .traits-grid {
+        max-height: none;
+      }
+
+      button {
+        font-size: 13px;
+        padding: 8px 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .nav-right {
         width: 100%;
-        font-size: 15px;
+        justify-content: flex-end;
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="container">
-    <!-- 问卷：分页选词 -->
-    <div class="card">
-      <div class="title">大五人格选词测评（中性正向版原型）</div>
+<div class="page-wrapper">
+  <div class="card">
+    <div class="header">
+      <h1 class="title">人格选词测评</h1>
       <div class="subtitle">
-        请从下面的词语中勾选「比较像我」的描述（可以多选，也可以一条都不选）。<br>
-        词语都是中性或偏正向的表达，用来捕捉你的偏好和风格，而不是评判好坏。<br>
-        顺序已随机打乱，不标出属于哪个维度。当前版本用于自我觉察和方法原型验证。
+        请从下面的词语中勾选「像我」的描述，<strong>最少选择 10 个</strong>。<br />
+        词语都是中性或偏正向的表达，用来捕捉你的偏好和风格，而不是评判好坏。
       </div>
-
-      <form id="traitForm" onsubmit="return false;">
-        <div id="stepInfo" class="small" style="margin-bottom:6px;">
-          第 1 页，共 6 页
-        </div>
-        <div id="traitsPages"></div>
-
-        <div class="nav-row">
-          <button type="button" id="prevBtn" class="btn" disabled>上一页</button>
-          <button type="button" id="nextBtn" class="btn">下一页</button>
-        </div>
-      </form>
     </div>
 
-    <!-- 结果卡片 -->
-    <div id="resultContainer" class="card" style="display:none;">
-      <div class="title">测评结果</div>
-      <div class="subtitle">
-        雷达图数值范围为 0–1，越接近 1 表示该维度偏高。中部为大五整体画像与能力关键词，其后是全局类型推断（MBTI / PI / 颜色 / PDP，仅供参考），最底部是维度级扩展说明。
+    <div class="main-layout">
+      <!-- 左侧：选词 -->
+      <div class="left-panel">
+        <div class="section-title">
+          <span>步骤 1：勾选符合你的词语</span>
+          <span class="step-indicator" id="stepInfo"></span>
+        </div>
+        <div id="traitsContainer" class="traits-grid"></div>
+        <div class="nav-row">
+          <div class="nav-left">
+            <span id="selectedCountInfo">已选 0 个</span>
+          </div>
+          <div class="nav-right">
+            <button id="prevBtn" class="btn-secondary" type="button">上一页</button>
+            <button id="nextBtn" class="btn-primary" type="button">下一页</button>
+          </div>
+        </div>
+        <div class="nav-row" style="margin-top:6px;justify-content:flex-end;">
+          <button id="recalcBtn" class="btn-ghost" type="button" style="display:none;">
+            重新根据当前选项计算结果
+          </button>
+        </div>
       </div>
-      <div style="margin-bottom:16px; text-align:center;">
-        <canvas id="big5Chart" width="320" height="220"></canvas>
+
+      <!-- 右侧：结果 -->
+      <div class="right-panel">
+        <div class="section-title">
+          <span>步骤 2：查看测评结果</span>
+          <span class="tag-line" id="statusHint">提交后在此查看大五画像与类型推断</span>
+        </div>
+        <div id="resultContent" class="result-section">
+          <div class="result-block">
+            <p>当前还未提交。完成选词后，点击右下角「提交测评」生成你的画像。</p>
+          </div>
+        </div>
       </div>
-      <div id="resultContent"></div>
     </div>
   </div>
+</div>
 
-  <script>
-    // 选择数量限制
-    const MIN_SELECTED = 10;
-    const MAX_SELECTED = 35;
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // ======== 基础数据：80 个中性/正向词汇 + 五维权重 ========
 
-    // ===== 1. 词汇表：参考你提供的中性正向词汇思路，前 50 个做原型 =====
-    // 每个词：label 日常化说明，weights 为在 O/C/E/A/N 上的权重（-1~+1）
-    const traits = [
-      // ===== 第一组：动力与主张（偏 E+/A-，带一点 C+）=====
-      {
-        id: "t1",
-        label: "好胜的（喜欢赢，有竞争心）",
-        weights: { O: 0.0, C: 0.3, E: 0.4, A: -0.6, N: 0.0 }
-      },
-      {
-        id: "t2",
-        label: "坚定的（表达有主见，不容易被带偏）",
-        weights: { O: 0.0, C: 0.0, E: 0.7, A: -0.2, N: -0.3 }
-      },
-      {
-        id: "t3",
-        label: "直率的（说话比较直接，少拐弯抹角）",
-        weights: { O: 0.2, C: 0.0, E: 0.3, A: -0.5, N: 0.0 }
-      },
-      {
-        id: "t4",
-        label: "有野心的（对成绩和目标期望值高）",
-        weights: { O: 0.0, C: 0.6, E: 0.4, A: -0.2, N: 0.0 }
-      },
-      {
-        id: "t5",
-        label: "敢言的（敢说出真实想法）",
-        weights: { O: 0.3, C: 0.0, E: 0.6, A: -0.3, N: 0.0 }
-      },
-      {
-        id: "t6",
-        label: "独立的（习惯自己做决定，自己扛事）",
-        weights: { O: 0.4, C: 0.0, E: -0.2, A: -0.3, N: 0.0 }
-      },
-      {
-        id: "t7",
-        label: "严格的（对标准和要求比较高）",
-        weights: { O: 0.0, C: 0.5, E: 0.0, A: -0.5, N: 0.0 }
-      },
-      {
-        id: "t8",
-        label: "有怀疑精神的（习惯多问几个“为什么”）",
-        weights: { O: 0.4, C: 0.2, E: 0.0, A: -0.4, N: 0.0 }
-      },
-      {
-        id: "t9",
-        label: "喜欢掌控局面的（自然带节奏、带头）",
-        weights: { O: 0.0, C: 0.0, E: 0.8, A: -0.4, N: 0.0 }
-      },
-      {
-        id: "t10",
-        label: "务实的（更关注现实和落地效果）",
-        weights: { O: -0.5, C: 0.4, E: 0.0, A: 0.0, N: 0.0 }
-      },
+  const dims = ["O", "C", "E", "A", "N"]; // 开放性、尽责性、外向性、宜人性、情绪稳定(反向N)
 
-      // ===== 第二组：灵活与自由（偏 C- / O+）=====
-      {
-        id: "t11",
-        label: "随性的（不太爱被严格时间表束缚）",
-        weights: { O: 0.3, C: -0.6, E: 0.4, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t12",
-        label: "灵活的（遇事容易变通，少死磕）",
-        weights: { O: 0.3, C: -0.4, E: 0.0, A: 0.3, N: 0.0 }
-      },
-      {
-        id: "t13",
-        label: "即兴的（很多时候喜欢临场发挥）",
-        weights: { O: 0.5, C: -0.5, E: 0.0, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t14",
-        label: "悠闲的（节奏感偏慢，不喜欢太紧绷）",
-        weights: { O: 0.0, C: -0.7, E: 0.0, A: 0.0, N: -0.3 }
-      },
-      {
-        id: "t15",
-        label: "享受当下的（比较重视当下的舒适和快乐）",
-        weights: { O: 0.0, C: -0.5, E: 0.4, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t16",
-        label: "不太按套路来的（不太喜欢照传统方式办事）",
-        weights: { O: 0.7, C: -0.3, E: 0.0, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t17",
-        label: "爱幻想的（脑子里经常会冒出各种点子和画面）",
-        weights: { O: 0.6, C: -0.4, E: 0.0, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t18",
-        label: "随和的（比较好说话，不太跟人计较）",
-        weights: { O: 0.0, C: -0.3, E: 0.0, A: 0.5, N: -0.4 }
-      },
-      {
-        id: "t19",
-        label: "多变的（兴趣和状态变化比较快）",
-        weights: { O: 0.4, C: -0.4, E: 0.0, A: 0.0, N: 0.2 }
-      },
-      {
-        id: "t20",
-        label: "大胆尝试的（喜欢试一些新鲜或有挑战的事情）",
-        weights: { O: 0.4, C: -0.2, E: 0.5, A: 0.0, N: 0.0 }
-      },
+  const traits = [
+    // 1–10：动力与主张 (E+ / A-)
+    {
+      id: "t1",
+      label: "好胜的（有竞争心，喜欢赢）",
+      weights: { A: -0.6, E: 0.4, C: 0.3, O: 0, N: 0 }
+    },
+    {
+      id: "t2",
+      label: "坚定的（主见明确，敢于表达立场）",
+      weights: { E: 0.7, N: -0.3, A: -0.2, O: 0, C: 0 }
+    },
+    {
+      id: "t3",
+      label: "直率的（说话直接，不太拐弯）",
+      weights: { A: -0.5, E: 0.3, O: 0.2, C: 0, N: 0 }
+    },
+    {
+      id: "t4",
+      label: "有野心的（对目标有追求）",
+      weights: { C: 0.6, E: 0.4, A: -0.2, O: 0, N: 0 }
+    },
+    {
+      id: "t5",
+      label: "敢言的（愿意表达真实看法）",
+      weights: { E: 0.6, A: -0.3, O: 0.3, C: 0, N: 0 }
+    },
+    {
+      id: "t6",
+      label: "独立的（习惯自己做决定）",
+      weights: { A: -0.3, E: -0.2, O: 0.4, C: 0, N: 0 }
+    },
+    {
+      id: "t7",
+      label: "严厉的（标准高，要求严格）",
+      weights: { C: 0.5, A: -0.5, E: 0, O: 0, N: 0 }
+    },
+    {
+      id: "t8",
+      label: "怀疑的（习惯多问几个为什么）",
+      weights: { A: -0.4, O: 0.4, C: 0.2, E: 0, N: 0 }
+    },
+    {
+      id: "t9",
+      label: "支配的（喜欢掌控局面）",
+      weights: { E: 0.8, A: -0.4, C: 0, O: 0, N: 0 }
+    },
+    {
+      id: "t10",
+      label: "务实的（关注现实与可行性）",
+      weights: { O: -0.5, C: 0.4, E: 0, A: 0, N: 0 }
+    },
 
-      // ===== 第三组：敏感与深度（偏 N+ / O+）=====
-      {
-        id: "t21",
-        label: "敏感细腻的（对情绪和气氛很有感觉）",
-        weights: { O: 0.3, C: 0.0, E: 0.0, A: 0.2, N: 0.6 }
-      },
-      {
-        id: "t22",
-        label: "感性丰富的（容易被故事、音乐等打动）",
-        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.3, N: 0.7 }
-      },
-      {
-        id: "t23",
-        label: "情感热烈的（喜欢真情实感，不太淡漠）",
-        weights: { O: 0.3, C: 0.0, E: 0.4, A: 0.0, N: 0.5 }
-      },
-      {
-        id: "t24",
-        label: "喜欢自我反思的（常常回看自己的想法和行为）",
-        weights: { O: 0.3, C: 0.0, E: -0.5, A: 0.0, N: 0.3 }
-      },
-      {
-        id: "t25",
-        label: "警觉细致的（对风险和细节比较敏感）",
-        weights: { O: 0.0, C: 0.3, E: 0.0, A: 0.0, N: 0.5 }
-      },
-      {
-        id: "t26",
-        label: "追求完美的（对结果要求比较高）",
-        weights: { O: 0.0, C: 0.5, E: 0.0, A: 0.0, N: 0.4 }
-      },
-      {
-        id: "t27",
-        label: "有点怀旧的（容易记住过去的细节和感受）",
-        weights: { O: 0.2, C: 0.0, E: 0.0, A: 0.2, N: 0.3 }
-      },
-      {
-        id: "t28",
-        label: "谨慎周全的（做事时多想几步）",
-        weights: { O: -0.3, C: 0.3, E: 0.0, A: 0.0, N: 0.4 }
-      },
-      {
-        id: "t29",
-        label: "内心世界比较丰富的（想法很多，不一定都说出来）",
-        weights: { O: 0.6, C: 0.0, E: 0.0, A: 0.0, N: 0.3 }
-      },
-      {
-        id: "t30",
-        label: "谦逊低调的（不太喜欢过多夸耀自己）",
-        weights: { O: 0.0, C: 0.0, E: -0.3, A: 0.5, N: 0.2 }
-      },
+    // 11–20：灵活与自由 (C- / O+)
+    {
+      id: "t11",
+      label: "随性的（不太按固定计划来）",
+      weights: { C: -0.6, E: 0.4, O: 0.3, A: 0, N: 0 }
+    },
+    {
+      id: "t12",
+      label: "灵活的（容易变通和调整）",
+      weights: { C: -0.4, A: 0.3, O: 0.3, E: 0, N: 0 }
+    },
+    {
+      id: "t13",
+      label: "即兴的（喜欢临场发挥）",
+      weights: { C: -0.5, O: 0.5, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t14",
+      label: "悠闲的（节奏慢，不太紧绷）",
+      weights: { C: -0.7, N: -0.3, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t15",
+      label: "享乐的（重视当下享受）",
+      weights: { C: -0.5, E: 0.4, O: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t16",
+      label: "反传统的（不太按常规来）",
+      weights: { O: 0.7, C: -0.3, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t17",
+      label: "梦幻的（容易沉浸在想象中）",
+      weights: { O: 0.6, C: -0.4, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t18",
+      label: "随和的（好说话，不太较真）",
+      weights: { A: 0.5, C: -0.3, N: -0.4, O: 0, E: 0 }
+    },
+    {
+      id: "t19",
+      label: "多变的（容易改变兴趣或想法）",
+      weights: { C: -0.4, O: 0.4, N: 0.2, E: 0, A: 0 }
+    },
+    {
+      id: "t20",
+      label: "大胆的（愿意尝试有风险的选择）",
+      weights: { E: 0.5, C: -0.2, O: 0.4, A: 0, N: 0 }
+    },
 
-      // ===== 第四组：社交与活力（偏 E+ / A+）=====
-      {
-        id: "t31",
-        label: "有个人魅力的（在人群中容易被注意到）",
-        weights: { O: 0.3, C: 0.0, E: 0.7, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t32",
-        label: "健谈的（话比较多，容易打开话题）",
-        weights: { O: 0.0, C: -0.1, E: 0.8, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t33",
-        label: "热情的（待人接物比较有温度）",
-        weights: { O: 0.0, C: 0.0, E: 0.4, A: 0.7, N: 0.0 }
-      },
-      {
-        id: "t34",
-        label: "乐于助人的（看到别人需要时愿意伸手）",
-        weights: { O: 0.0, C: 0.2, E: 0.0, A: 0.8, N: 0.0 }
-      },
-      {
-        id: "t35",
-        label: "精力充沛的（一天安排很多事情也能撑得住）",
-        weights: { O: 0.0, C: 0.3, E: 0.7, A: 0.0, N: -0.2 }
-      },
-      {
-        id: "t36",
-        label: "有趣的（经常能让气氛不无聊）",
-        weights: { O: 0.3, C: 0.0, E: 0.6, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t37",
-        label: "有说服力的（讲道理时别人容易被你带动）",
-        weights: { O: 0.0, C: 0.3, E: 0.5, A: -0.1, N: 0.0 }
-      },
-      {
-        id: "t38",
-        label: "善于交际的（比较容易与不同类型的人打成一片）",
-        weights: { O: 0.0, C: 0.0, E: 0.8, A: 0.3, N: 0.0 }
-      },
-      {
-        id: "t39",
-        label: "比较阳光的（整体情绪偏乐观、开朗）",
-        weights: { O: 0.0, C: 0.0, E: 0.5, A: 0.3, N: -0.4 }
-      },
-      {
-        id: "t40",
-        label: "宽容的（对他人的不同和失误比较能接受）",
-        weights: { O: 0.3, C: 0.0, E: 0.0, A: 0.7, N: 0.0 }
-      },
+    // 21–30：敏感与深度 (N+ / O+)
+    {
+      id: "t21",
+      label: "敏感的（对细微变化很有感觉）",
+      weights: { N: 0.6, O: 0.3, A: 0.2, C: 0, E: 0 }
+    },
+    {
+      id: "t22",
+      label: "感性的（容易被情绪和氛围打动）",
+      weights: { N: 0.7, A: 0.3, O: 0, C: 0, E: 0 }
+    },
+    {
+      id: "t23",
+      label: "热烈的（情感外露，表达强烈）",
+      weights: { N: 0.5, E: 0.4, O: 0.3, C: 0, A: 0 }
+    },
+    {
+      id: "t24",
+      label: "自省的（常常回顾和反思自己）",
+      weights: { E: -0.5, N: 0.3, O: 0.3, C: 0, A: 0 }
+    },
+    {
+      id: "t25",
+      label: "警觉的（对风险和细节很敏锐）",
+      weights: { N: 0.5, C: 0.3, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t26",
+      label: "追求完美的（希望事情做到更好）",
+      weights: { C: 0.5, N: 0.4, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t27",
+      label: "怀旧的（容易被回忆触动）",
+      weights: { N: 0.3, O: 0.2, A: 0.2, C: 0, E: 0 }
+    },
+    {
+      id: "t28",
+      label: "谨慎的（做决定前会多想一步）",
+      weights: { C: 0.3, N: 0.4, O: -0.3, E: 0, A: 0 }
+    },
+    {
+      id: "t29",
+      label: "复杂的（内心活动丰富）",
+      weights: { O: 0.6, N: 0.3, C: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t30",
+      label: "谦卑的（为人低调不张扬）",
+      weights: { A: 0.5, E: -0.3, N: 0.2, O: 0, C: 0 }
+    },
 
-      // ===== 第五组：稳重与传统（偏 C+ / O- / N-）=====
-      {
-        id: "t41",
-        label: "比较传统的（对稳定和熟悉的方式更有安全感）",
-        weights: { O: -0.7, C: 0.4, E: 0.0, A: 0.2, N: 0.0 }
-      },
-      {
-        id: "t42",
-        label: "有条理的（做事前后比较有秩序）",
-        weights: { O: -0.1, C: 0.8, E: 0.0, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t43",
-        label: "一贯稳定的（做事风格变化不大）",
-        weights: { O: 0.0, C: 0.6, E: 0.0, A: 0.0, N: -0.3 }
-      },
-      {
-        id: "t44",
-        label: "现实务实的（更看重现实可行性）",
-        weights: { O: -0.5, C: 0.3, E: 0.0, A: 0.0, N: -0.3 }
-      },
-      {
-        id: "t45",
-        label: "遇事冷静的（不太容易情绪失控）",
-        weights: { O: 0.0, C: 0.0, E: 0.0, A: 0.3, N: -0.8 }
-      },
-      {
-        id: "t46",
-        label: "按部就班的（喜欢按步骤和流程来推进）",
-        weights: { O: -0.3, C: 0.7, E: 0.0, A: 0.0, N: 0.0 }
-      },
-      {
-        id: "t47",
-        label: "有原则的（有自己的底线和标准）",
-        weights: { O: 0.0, C: 0.6, E: 0.0, A: -0.2, N: 0.0 }
-      },
-      {
-        id: "t48",
-        label: "知足踏实的（不太强求什么都要再更进一步）",
-        weights: { O: 0.0, C: -0.2, E: 0.0, A: 0.0, N: -0.6 }
-      },
-      {
-        id: "t49",
-        label: "行事稳健的（不太冲动，比较看重安全）",
-        weights: { O: 0.0, C: 0.4, E: 0.0, A: 0.0, N: -0.6 }
-      },
-      {
-        id: "t50",
-        label: "偏常规的（更偏好常见做法，而不是猎奇）",
-        weights: { O: -0.6, C: 0.3, E: 0.0, A: 0.3, N: 0.0 }
-      }
-    ];
+    // 31–40：社交与活力 (E+ / A+)
+    {
+      id: "t31",
+      label: "充满磁性的（容易吸引别人注意）",
+      weights: { E: 0.7, O: 0.3, C: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t32",
+      label: "健谈的（话比较多，容易聊起来）",
+      weights: { E: 0.8, C: -0.1, O: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t33",
+      label: "热情的（对人对事都比较热络）",
+      weights: { A: 0.7, E: 0.4, O: 0, C: 0, N: 0 }
+    },
+    {
+      id: "t34",
+      label: "乐于助人的（愿意为别人提供帮助）",
+      weights: { A: 0.8, C: 0.2, O: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t35",
+      label: "精力充沛的（体力与精力都比较旺）",
+      weights: { E: 0.7, C: 0.3, N: -0.2, O: 0, A: 0 }
+    },
+    {
+      id: "t36",
+      label: "有趣的（经常带来话题和笑点）",
+      weights: { E: 0.6, O: 0.3, C: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t37",
+      label: "有说服力的（讲话容易让人信服）",
+      weights: { E: 0.5, C: 0.3, A: -0.1, O: 0, N: 0 }
+    },
+    {
+      id: "t38",
+      label: "善于交际的（容易融入人群）",
+      weights: { E: 0.8, A: 0.3, C: 0, O: 0, N: 0 }
+    },
+    {
+      id: "t39",
+      label: "欢快的（情绪多偏积极、明朗）",
+      weights: { E: 0.5, N: -0.4, A: 0.3, O: 0, C: 0 }
+    },
+    {
+      id: "t40",
+      label: "宽容的（对不同意见比较包容）",
+      weights: { A: 0.7, O: 0.3, C: 0, E: 0, N: 0 }
+    },
 
-    const dimensionMeta = {
-      O: { name: "开放性 O" },
-      C: { name: "尽责性 C" },
-      E: { name: "外向性 E" },
-      A: { name: "宜人性 A" },
-      N: { name: "情绪稳定性 N" } // 高 N = 稳定；低 N = 敏感
-    };
+    // 41–50：稳重与传统 (C+ / O- / N-)
+    {
+      id: "t41",
+      label: "传统的（更认同熟悉的做法）",
+      weights: { O: -0.7, C: 0.4, A: 0.2, E: 0, N: 0 }
+    },
+    {
+      id: "t42",
+      label: "有条理的（做事有计划、有次序）",
+      weights: { C: 0.8, O: -0.1, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t43",
+      label: "一贯的（风格和习惯比较稳定）",
+      weights: { C: 0.6, N: -0.3, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t44",
+      label: "现实的（很看重实际效果）",
+      weights: { O: -0.5, N: -0.3, C: 0.3, E: 0, A: 0 }
+    },
+    {
+      id: "t45",
+      label: "冷静的（遇事比较镇定）",
+      weights: { N: -0.8, A: 0.3, O: 0, C: 0, E: 0 }
+    },
+    {
+      id: "t46",
+      label: "按部就班的（按流程一步一步来）",
+      weights: { C: 0.7, O: -0.3, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t47",
+      label: "有原则的（有自己的标准和底线）",
+      weights: { C: 0.6, A: -0.2, O: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t48",
+      label: "知足的（容易满足于现状）",
+      weights: { N: -0.6, C: -0.2, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t49",
+      label: "稳健的（做事稳重、不冒进）",
+      weights: { N: -0.6, C: 0.4, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t50",
+      label: "常规的（倾向按规则办事）",
+      weights: { O: -0.6, A: 0.3, C: 0.3, E: 0, N: 0 }
+    },
 
-    // ===== 2. 四档解释：沿用你之前的 O/C/E/A/N 发展阶梯 =====
-    const profiles = {
-      O: {
-        1: {
-          stageLabel: "O1 稳定实践型",
-          big5Summary: "更偏好熟悉、具体、可预期的做法，对新方法保持谨慎。",
-          abilitySummary: ["经验复用", "标准化执行"],
-          mbtiMapping: "偏 S 型（感觉型），较少表现为高 N。",
-          piMapping: "近似 PI：A 较低（主导/探索驱动力较弱）。",
-          color: "偏蓝/绿，但不固定。",
-          pdp: "不固定对应动物。"
-        },
-        2: {
-          stageLabel: "O2 守成好奇型",
-          big5Summary: "以现有做法为基底，在安全范围内接受小改动。",
-          abilitySummary: ["局部改进", "在旧框架内微调"],
-          mbtiMapping: "偏 S，兼具一定 N 倾向。",
-          piMapping: "近似 PI：A 中等水平。",
-          color: "颜色不固定。",
-          pdp: "不固定对应动物。"
-        },
-        3: {
-          stageLabel: "O3 探索开放型",
-          big5Summary: "主动接触新信息和方法，对不确定性有一定容忍度。",
-          abilitySummary: ["信息搜集", "多方案设计", "试验与迭代"],
-          mbtiMapping: "偏 N 型（直觉型），如 N 相关类型。",
-          piMapping: "近似 PI：A 偏高（有推动新做法的意愿）。",
-          color: "倾向黄色（开放、好奇）。",
-          pdp: "不固定对应动物。"
-        },
-        4: {
-          stageLabel: "O4 系统创新型",
-          big5Summary: "高度开放，倾向从底层重构规则和系统。",
-          abilitySummary: ["模式识别与抽象建模", "系统级创新与重构"],
-          mbtiMapping: "强 N 倾向，经常出现在 Nx** 类型中。",
-          piMapping: "近似 PI：A 很高（强变革驱动力）。",
-          color: "典型黄色。",
-          pdp: "不强制绑定某一种动物。"
-        }
-      },
-      C: {
-        1: {
-          stageLabel: "C1 随性散漫型",
-          big5Summary: "时间与任务组织度较低，更多依赖外部压力和当下感觉。",
-          abilitySummary: ["在明确监督下完成任务"],
-          mbtiMapping: "偏 P 型（感知型），J 倾向较弱。",
-          piMapping: "近似 PI：C 低、D 低。",
-          color: "颜色不固定。",
-          pdp: "不固定对应动物。"
-        },
-        2: {
-          stageLabel: "C2 情绪驱动型",
-          big5Summary: "有责任感，但执行节奏受情绪和紧迫感影响。",
-          abilitySummary: ["任务拆解初级", "短期冲刺"],
-          mbtiMapping: "略偏 P，中性到偏 P。",
-          piMapping: "近似 PI：C 中等、D 中等。",
-          color: "颜色不固定。",
-          pdp: "不固定对应动物。"
-        },
-        3: {
-          stageLabel: "C3 计划执行型",
-          big5Summary: "倾向提前规划和列清单，能较稳定地按计划推进。",
-          abilitySummary: ["目标拆解", "计划管理", "进度跟踪"],
-          mbtiMapping: "略偏 J 型，中性到偏 J。",
-          piMapping: "近似 PI：C 偏高、D 偏高。",
-          color: "接近蓝色。",
-          pdp: "可近似猫头鹰的一部分特征。"
-        },
-        4: {
-          stageLabel: "C4 策略系统型",
-          big5Summary: "高度尽责且有强结构感，擅长中长期规划与流程设计。",
-          abilitySummary: ["战略规划", "流程设计与优化", "风险预案"],
-          mbtiMapping: "强 J 型（判断型），常见于 **J* 类型。",
-          piMapping: "近似 PI：C 高、D 高（高度耐心和规范）。",
-          color: "典型蓝色（严谨、重规则）。",
-          pdp: "猫头鹰型。"
-        }
-      },
-      E: {
-        1: {
-          stageLabel: "E1 退场观望型",
-          big5Summary: "偏好独处或小范围互动，大场合多为旁观角色。",
-          abilitySummary: ["深度一对一对话", "专注倾听"],
-          mbtiMapping: "偏 I 型（内向）。",
-          piMapping: "近似 PI：B 低。",
-          color: "可能偏蓝/绿。",
-          pdp: "不固定对应动物。"
-        },
-        2: {
-          stageLabel: "E2 选择性社交型",
-          big5Summary: "在自己看重的关系和场合中较外向，其他情境偏克制。",
-          abilitySummary: ["关系筛选", "信任构建"],
-          mbtiMapping: "略偏 I，中性到偏 I。",
-          piMapping: "近似 PI：B 中等。",
-          color: "颜色不固定。",
-          pdp: "不固定对应动物。"
-        },
-        3: {
-          stageLabel: "E3 协作外向型",
-          big5Summary: "偏好群体互动与合作，乐于参与讨论和带动氛围。",
-          abilitySummary: ["群体沟通", "协作带动"],
-          mbtiMapping: "略偏 E，中性到偏 E。",
-          piMapping: "近似 PI：B 偏高。",
-          color: "偏黄/红。",
-          pdp: "不固定对应动物。"
-        },
-        4: {
-          stageLabel: "E4 领导外向型",
-          big5Summary: "强外向与影响驱动力，喜欢站在场合中心并主动带节奏。",
-          abilitySummary: ["大场合表达与控场", "网络搭建与资源整合"],
-          mbtiMapping: "强 E 型，典型 Ex** 类型。",
-          piMapping: "近似 PI：B 高（强社交驱动力）。",
-          color: "红色型（果断、表现欲强）。",
-          pdp: "孔雀型。"
-        }
-      },
-      A: {
-        1: {
-          stageLabel: "A1 对抗直率型",
-          big5Summary: "重结果、重对错，表达直接，更强调立场清晰。",
-          abilitySummary: ["直接表达", "立场界定"],
-          mbtiMapping: "偏 T 型（思考型），F 倾向较弱。",
-          piMapping: "近似 PI：A 高、C 低（强支配、低耐心）。",
-          color: "偏红。",
-          pdp: "不固定对应动物。"
-        },
-        2: {
-          stageLabel: "A2 立场清晰型",
-          big5Summary: "有立场，同时会注意方式，希望维持基本关系。",
-          abilitySummary: ["基础换位", "折中方案"],
-          mbtiMapping: "略偏 T，中性到偏 T。",
-          piMapping: "近似 PI：A 中等、C 中等。",
-          color: "颜色不固定。",
-          pdp: "不固定对应动物。"
-        },
-        3: {
-          stageLabel: "A3 合作共情型",
-          big5Summary: "重视他人感受和合作氛围，愿意为关系做出调整。",
-          abilitySummary: ["共情倾听", "双赢思维"],
-          mbtiMapping: "略偏 F 型（情感型）。",
-          piMapping: "近似 PI：A 偏低、C 偏高。",
-          color: "偏绿/蓝绿。",
-          pdp: "不固定对应动物。"
-        },
-        4: {
-          stageLabel: "A4 关系整合型",
-          big5Summary: "高度宜人，兼具边界感与共情，擅长多方平衡与协调。",
-          abilitySummary: ["多方协调", "关系修复与规则共建"],
-          mbtiMapping: "强 F 型，常见于 **F* 类型。",
-          piMapping: "近似 PI：A 低、C 高（高配合、高耐心）。",
-          color: "典型绿色（温和、体贴、重关系）。",
-          pdp: "考拉型。"
-        }
-      },
-      N: {
-        1: {
-          stageLabel: "N1 高敏感易波动型",
-          big5Summary: "情绪反应较敏感，遇到压力时容易被影响。",
-          abilitySummary: ["情绪识别", "触发点觉察（起步）"],
-          mbtiMapping: "MBTI 体系中没有独立情绪稳定维度，此处不映射。",
-          piMapping: "PI 不直接测情绪稳定性，此处不映射。",
-          color: "颜色不绑定。",
-          pdp: "不绑定对应动物。"
-        },
-        2: {
-          stageLabel: "N2 高敏感有觉察型",
-          big5Summary: "仍然敏感，但已开始主动寻找调节方式。",
-          abilitySummary: ["简单情绪调节", "求助能力"],
-          mbtiMapping: "MBTI 中无直接对应维度。",
-          piMapping: "PI 同上，不映射。",
-          color: "颜色不绑定。",
-          pdp: "不绑定对应动物。"
-        },
-        3: {
-          stageLabel: "N3 稳态稳定型",
-          big5Summary: "多数压力情境下能保持功能，情绪波动可控。",
-          abilitySummary: ["压力管理", "界限感"],
-          mbtiMapping: "MBTI 中无直接对应维度。",
-          piMapping: "PI 同上，不映射。",
-          color: "颜色不绑定。",
-          pdp: "不绑定对应动物。"
-        },
-        4: {
-          stageLabel: "N4 高弹性成长型",
-          big5Summary: "情绪稳定且自我觉察高，具备明显心理弹性与逆境成长能力。",
-          abilitySummary: ["心理弹性", "意义建构与资源整合"],
-          mbtiMapping: "MBTI 中无直接对应维度。",
-          piMapping: "PI 同上，不映射。",
-          color: "颜色不绑定单一类型。",
-          pdp: "不绑定对应动物。"
-        }
-      }
-    };
-
-    // ===== 3. 工具函数：打乱、分页 =====
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
+    // 51–80：混合补充词
+    {
+      id: "t51",
+      label: "善解人意的（容易理解他人感受）",
+      weights: { A: 0.6, O: 0.3, C: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t52",
+      label: "注重细节的（会注意到小地方）",
+      weights: { C: 0.6, O: -0.3, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t53",
+      label: "内敛的（不太外露情绪）",
+      weights: { E: -0.6, N: -0.2, A: 0, O: 0, C: 0 }
+    },
+    {
+      id: "t54",
+      label: "理智的（以分析和道理为主）",
+      weights: { C: 0.6, N: -0.4, A: -0.3, O: 0, E: 0 }
+    },
+    {
+      id: "t55",
+      label: "有艺术感的（对美和艺术很敏感）",
+      weights: { O: 0.6, N: 0.4, C: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t56",
+      label: "老练的（做事老到，有经验感）",
+      weights: { O: 0.5, C: 0.5, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t57",
+      label: "单纯的（想法比较简单、直接）",
+      weights: { O: -0.4, A: 0.5, N: -0.3, C: 0, E: 0 }
+    },
+    {
+      id: "t58",
+      label: "坚韧的（遇到困难能扛得住）",
+      weights: { N: -0.5, C: 0.5, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t59",
+      label: "深思熟虑的（做决定前会反复权衡）",
+      weights: { C: 0.6, E: -0.4, O: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t60",
+      label: "好奇的（对新鲜事物感兴趣）",
+      weights: { O: 0.6, E: 0.4, C: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t61",
+      label: "客观的（看问题时较少带入个人好恶）",
+      weights: { A: -0.4, C: 0.5, O: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t62",
+      label: "投入的（做事时会很专注认真）",
+      weights: { C: 0.5, A: 0.5, O: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t63",
+      label: "温和的（待人不锋芒毕露）",
+      weights: { A: 0.6, E: -0.3, O: 0, C: 0, N: 0 }
+    },
+    {
+      id: "t64",
+      label: "好学的（喜欢学习新知识）",
+      weights: { O: 0.5, C: 0.5, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t65",
+      label: "朴素的（生活风格简单自然）",
+      weights: { O: -0.4, A: 0.4, E: -0.3, C: 0, N: 0 }
+    },
+    {
+      id: "t66",
+      label: "时尚的（关注形象和流行）",
+      weights: { O: 0.5, E: 0.5, C: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t67",
+      label: "公正的（在意公平和规则）",
+      weights: { C: 0.5, A: 0.5, O: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t68",
+      label: "爱幻想的（脑中常常会冒出各种点子）",
+      weights: { O: 0.6, C: -0.4, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t69",
+      label: "敏锐的（抓重点和关键很快）",
+      weights: { C: 0.5, O: 0.5, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t70",
+      label: "沉默的（不太主动说话）",
+      weights: { E: -0.6, N: 0.4, A: -0.3, O: 0, C: 0 }
+    },
+    {
+      id: "t71",
+      label: "从容的（节奏不慌不忙）",
+      weights: { N: -0.5, C: 0.4, O: 0, E: 0, A: 0 }
+    },
+    {
+      id: "t72",
+      label: "精明的（算得清、计划性强）",
+      weights: { C: 0.6, A: -0.3, O: 0, E: 0, N: 0 }
+    },
+    {
+      id: "t73",
+      label: "有创造力的（会想出新点子）",
+      weights: { O: 0.7, C: -0.3, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t74",
+      label: "顺从的（愿意配合团体安排）",
+      weights: { A: 0.6, E: -0.3, O: 0, C: 0, N: 0 }
+    },
+    {
+      id: "t75",
+      label: "自主的（喜欢按自己的想法来）",
+      weights: { A: -0.5, E: -0.3, O: 0, C: 0, N: 0 }
+    },
+    {
+      id: "t76",
+      label: "系统的（习惯从整体结构去安排事情）",
+      weights: { C: 0.6, O: -0.3, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t77",
+      label: "哲理的（喜欢思考人生和意义）",
+      weights: { O: 0.7, C: 0, E: 0, A: 0, N: 0 }
+    },
+    {
+      id: "t78",
+      label: "勇敢的（面对挑战不太退缩）",
+      weights: { N: -0.4, E: 0.6, O: 0, C: 0, A: 0 }
+    },
+    {
+      id: "t79",
+      label: "活泼的（整个人比较有活力、爱动）",
+      weights: { E: 0.7, N: -0.3, O: 0, C: 0, A: 0 }
+    },
+    {
+      id: "t80",
+      label: "真诚的（表达和内心基本一致）",
+      weights: { A: 0.6, C: 0.4, O: 0, E: 0, N: 0 }
     }
+  ];
 
-    const PAGE_COUNT = 6;
-    let currentPage = 0;
-    let totalPages = PAGE_COUNT;
-    let hasSubmitted = false;
+  // ======== 选项状态 & 分页逻辑 ========
 
-    function renderForm() {
-      const pagesContainer = document.getElementById("traitsPages");
-      pagesContainer.innerHTML = "";
+  const MIN_SELECTED = 10;
+  const TOTAL_PAGES = 6;
+  const PAGE_SIZE = Math.ceil(traits.length / TOTAL_PAGES);
 
-      const items = traits.slice();
-      shuffle(items);
+  const selectedMap = {};
+  traits.forEach(tr => { selectedMap[tr.id] = false; });
 
-      const perPage = Math.ceil(items.length / PAGE_COUNT);
+  let currentPage = 0;
+  let hasSubmitted = false;
+  let radarChartInstance = null;
 
-      for (let p = 0; p < PAGE_COUNT; p++) {
-        const pageDiv = document.createElement("div");
-        pageDiv.className = "trait-page";
-        pageDiv.id = "page-" + p;
+  const traitsContainer = document.getElementById("traitsContainer");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const stepInfo = document.getElementById("stepInfo");
+  const selectedCountInfo = document.getElementById("selectedCountInfo");
+  const resultContent = document.getElementById("resultContent");
+  const statusHint = document.getElementById("statusHint");
+  const recalcBtn = document.getElementById("recalcBtn");
 
-        const list = document.createElement("div");
-        list.className = "trait-list";
+  function updateSelectedCountLabel() {
+    const count = Object.values(selectedMap).filter(Boolean).length;
+    selectedCountInfo.textContent = `已选 ${count} 个`;
+  }
 
-        const start = p * perPage;
-        const end = Math.min(start + perPage, items.length);
-        for (let i = start; i < end; i++) {
-          const tr = items[i];
+  function getShortLabel(trait) {
+    const text = trait.label;
+    const idx = text.indexOf("（");
+    return idx === -1 ? text : text.slice(0, idx);
+  }
 
-          const label = document.createElement("label");
-          label.className = "trait-item";
+  function renderPage(pageIndex) {
+    currentPage = pageIndex;
+    const start = pageIndex * PAGE_SIZE;
+    const end = Math.min(start + PAGE_SIZE, traits.length);
 
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.id = tr.id;
-          checkbox.name = tr.id;
+    traitsContainer.innerHTML = "";
+    for (let i = start; i < end; i++) {
+      const tr = traits[i];
 
-          const text = document.createTextNode(tr.label);
+      const item = document.createElement("label");
+      item.className = "trait-item";
+      item.setAttribute("for", tr.id);
 
-          label.appendChild(checkbox);
-          label.appendChild(text);
-          list.appendChild(label);
-        }
-
-        pageDiv.appendChild(list);
-        pagesContainer.appendChild(pageDiv);
-      }
-
-      totalPages = PAGE_COUNT;
-      showPage(0);
-    }
-
-    function showPage(index) {
-      currentPage = index;
-      for (let p = 0; p < totalPages; p++) {
-        const pageDiv = document.getElementById("page-" + p);
-        if (pageDiv) {
-          pageDiv.style.display = (p === currentPage) ? "block" : "none";
-        }
-      }
-      const stepInfo = document.getElementById("stepInfo");
-      stepInfo.textContent = "第 " + (currentPage + 1) + " 页，共 " + totalPages + " 页";
-
-      const prevBtn = document.getElementById("prevBtn");
-      const nextBtn = document.getElementById("nextBtn");
-
-      prevBtn.disabled = hasSubmitted || currentPage === 0;
-      if (hasSubmitted) {
-        nextBtn.disabled = true;
-        nextBtn.textContent = "已提交";
-      } else {
-        nextBtn.disabled = false;
-        nextBtn.textContent = (currentPage === totalPages - 1) ? "提交测评" : "下一页";
-      }
-    }
-
-    // ===== 4. 计算得分：只在“已选条目”上归一化的多维权重算法 =====
-    function clamp(x, min, max) {
-      return Math.max(min, Math.min(max, x));
-    }
-
-    function computeScores() {
-      const dims = ["O", "C", "E", "A", "N"];
-      const result = {};
-      const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
-      const selectedAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
-      const totalAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
-
-      // 所有条目理论绝对值总和（用于 coverage）
-      traits.forEach(tr => {
-        dims.forEach(d => {
-          const w = (tr.weights && typeof tr.weights[d] === "number") ? tr.weights[d] : 0;
-          totalAbs[d] += Math.abs(w);
-        });
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = tr.id;
+      checkbox.checked = !!selectedMap[tr.id];
+      checkbox.addEventListener("change", (e) => {
+        selectedMap[tr.id] = e.target.checked;
+        updateSelectedCountLabel();
       });
 
-      // 已选条目 raw 和 selectedAbs
-      traits.forEach(tr => {
-        const checked = document.getElementById(tr.id).checked;
-        if (!checked) return;
-        dims.forEach(d => {
-          const w = (tr.weights && typeof tr.weights[d] === "number") ? tr.weights[d] : 0;
-          const aw = Math.abs(w);
-          if (aw > 0) {
-            raw[d] += w;
-            selectedAbs[d] += aw;
-          }
-        });
-      });
+      const labelDiv = document.createElement("div");
+      labelDiv.className = "trait-label";
 
-      // 归一化 + 分档
+      // 分拆主词与副说明
+      const full = tr.label;
+      const idx = full.indexOf("（");
+      let main = full, sub = "";
+      if (idx !== -1) {
+        main = full.slice(0, idx);
+        sub = full.slice(idx);
+      }
+
+      const mainSpan = document.createElement("span");
+      mainSpan.className = "trait-label-main";
+      mainSpan.textContent = main;
+
+      labelDiv.appendChild(mainSpan);
+
+      if (sub) {
+        const subSpan = document.createElement("span");
+        subSpan.className = "trait-label-sub";
+        subSpan.textContent = sub.replace(/^（|）$/g, "");
+        labelDiv.appendChild(subSpan);
+      }
+
+      item.appendChild(checkbox);
+      item.appendChild(labelDiv);
+      traitsContainer.appendChild(item);
+    }
+
+    stepInfo.textContent = `第 ${currentPage + 1} / ${TOTAL_PAGES} 步`;
+
+    // 导航按钮状态
+    if (hasSubmitted) {
+      prevBtn.disabled = false; // 提交后上一页仍然可用
+      nextBtn.disabled = true;
+      nextBtn.textContent = "已提交";
+    } else {
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = false;
+      nextBtn.textContent = currentPage === TOTAL_PAGES - 1 ? "提交测评" : "下一页";
+    }
+
+    updateSelectedCountLabel();
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 0) {
+      renderPage(currentPage - 1);
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < TOTAL_PAGES - 1) {
+      renderPage(currentPage + 1);
+    } else {
+      handleSubmit();
+    }
+  });
+
+  recalcBtn.addEventListener("click", () => {
+    handleSubmit(true); // 允许多次根据当前选项重算
+  });
+
+  // ======== 一致性检测：相反词对 ========
+
+  const contradictionPairs = [
+    { a: "t1", b: "t48" },   // 好胜 vs 知足
+    { a: "t11", b: "t42" },  // 随性 vs 有条理
+    { a: "t11", b: "t46" },  // 随性 vs 按部就班
+    { a: "t19", b: "t43" },  // 多变 vs 一贯
+    { a: "t16", b: "t41" },  // 反传统 vs 传统
+    { a: "t17", b: "t10" },  // 梦幻 vs 务实
+    { a: "t17", b: "t44" },  // 梦幻 vs 现实
+    { a: "t21", b: "t45" },  // 敏感 vs 冷静
+    { a: "t32", b: "t70" },  // 健谈 vs 沉默
+    { a: "t38", b: "t53" },  // 善于交际 vs 内敛
+    { a: "t35", b: "t14" },  // 精力充沛 vs 悠闲
+    { a: "t23", b: "t71" }   // 热烈 vs 从容
+  ];
+
+  function checkConsistency() {
+    const selectedIds = new Set(
+      traits.filter(tr => selectedMap[tr.id]).map(tr => tr.id)
+    );
+    const conflicts = [];
+    contradictionPairs.forEach(pair => {
+      if (selectedIds.has(pair.a) && selectedIds.has(pair.b)) {
+        const ta = traits.find(t => t.id === pair.a);
+        const tb = traits.find(t => t.id === pair.b);
+        if (ta && tb) {
+          conflicts.push({
+            aId: pair.a,
+            bId: pair.b,
+            aLabel: getShortLabel(ta),
+            bLabel: getShortLabel(tb)
+          });
+        }
+      }
+    });
+    return { conflictCount: conflicts.length, conflicts };
+  }
+
+  // ======== 大五分级配置（4 阶梯） ========
+
+  const dimNames = {
+    O: "开放性 O",
+    C: "尽责性 C",
+    E: "外向性 E",
+    A: "宜人性 A",
+    N: "情绪稳定性 N"
+  };
+
+  const profiles = {
+    O: {
+      1: {
+        stageLabel: "O1 稳定守成型",
+        shortDesc: "更偏向熟悉和可控的环境，对新事物兴趣不强，但能在已有经验中反复精进。",
+        abilityKeywords: ["经验记忆与复用", "流程固化", "风险规避"]
+      },
+      2: {
+        stageLabel: "O2 审慎改进型",
+        shortDesc: "在熟悉框架内愿意做一些小范围尝试，会较多权衡利弊。",
+        abilityKeywords: ["问题复盘", "小步试错", "渐进式优化"]
+      },
+      3: {
+        stageLabel: "O3 探索开放型",
+        shortDesc: "乐于接触新信息和新方法，对不确定性有一定容忍度。",
+        abilityKeywords: ["信息搜集", "多方案设计", "试验与迭代"]
+      },
+      4: {
+        stageLabel: "O4 前瞻创造型",
+        shortDesc: "天然喜欢探索与创造，倾向于从更长远和整体的角度思考问题。",
+        abilityKeywords: ["抽象建模", "创新构想", "跨领域整合"]
+      }
+    },
+    C: {
+      1: {
+        stageLabel: "C1 随性弹性型",
+        shortDesc: "更随性，执行节奏受心情和情境影响大，容易临时调整计划。",
+        abilityKeywords: ["灵活应变", "机会把握", "临场发挥"]
+      },
+      2: {
+        stageLabel: "C2 情绪驱动型",
+        shortDesc: "有责任感，但执行节奏受情绪和紧迫感影响较大。",
+        abilityKeywords: ["短期冲刺", "任务抢救", "情境驱动执行"]
+      },
+      3: {
+        stageLabel: "C3 计划执行型",
+        shortDesc: "能制定可行计划并较好落实，任务完成率较稳定。",
+        abilityKeywords: ["任务拆解", "进度跟进", "持续执行"]
+      },
+      4: {
+        stageLabel: "C4 结构化高执行型",
+        shortDesc: "高度自律，善于搭建和维护系统性、标准化的执行结构。",
+        abilityKeywords: ["流程设计", "标准制定", "质量控制"]
+      }
+    },
+    E: {
+      1: {
+        stageLabel: "E1 安静保留型",
+        shortDesc: "偏向独处与安静思考，需要较多个人空间。",
+        abilityKeywords: ["独立思考", "深度专注", "书面表达"]
+      },
+      2: {
+        stageLabel: "E2 选择性社交型",
+        shortDesc: "在人少或熟悉的环境更愿意表达，在大场合会观望。",
+        abilityKeywords: ["小组沟通", "一对一交流", "倾听与反馈"]
+      },
+      3: {
+        stageLabel: "E3 协作外向型",
+        shortDesc: "偏好群体互动与合作，乐于参与讨论和带动氛围。",
+        abilityKeywords: ["会议发言", "协作推动", "氛围带动"]
+      },
+      4: {
+        stageLabel: "E4 高能社交型",
+        shortDesc: "在多人场合如鱼得水，乐于结识新朋友并保持高互动频率。",
+        abilityKeywords: ["公众表达", "关系拓展", "现场掌控"]
+      }
+    },
+    A: {
+      1: {
+        stageLabel: "A1 竞争自我优先型",
+        shortDesc: "更在意立场和结果，不太愿意为关系做太多妥协。",
+        abilityKeywords: ["立场坚守", "利益谈判", "边界感"]
+      },
+      2: {
+        stageLabel: "A2 立场清晰型",
+        shortDesc: "有立场，同时会注意方式，希望维持基本关系。",
+        abilityKeywords: ["坦诚沟通", "建设性反馈", "利益平衡"]
+      },
+      3: {
+        stageLabel: "A3 合作共赢型",
+        shortDesc: "重视团队合作，愿意在合理范围内照顾多方需求。",
+        abilityKeywords: ["协同合作", "冲突调停", "多方协调"]
+      },
+      4: {
+        stageLabel: "A4 高度共情型",
+        shortDesc: "对他人感受非常敏感，倾向于优先照顾关系与情绪。",
+        abilityKeywords: ["情感支持", "深度共情", "关系修复"]
+      }
+    },
+    N: {
+      1: {
+        stageLabel: "N1 高稳定耐压型",
+        shortDesc: "整体情绪稳定，压力来时波动较小，恢复速度较快。",
+        abilityKeywords: ["压力管理", "冷静决策", "危机应对"]
+      },
+      2: {
+        stageLabel: "N2 高敏感有觉察型",
+        shortDesc: "仍然敏感，但已开始主动寻找调节方式，对自己状态有觉察。",
+        abilityKeywords: ["自我觉察", "情绪命名", "寻求支持"]
+      },
+      3: {
+        stageLabel: "N3 情绪波动型",
+        shortDesc: "情绪起伏较大，容易受环境、人际和评价影响。",
+        abilityKeywords: ["情绪表达", "情境感知", "共情能力"]
+      },
+      4: {
+        stageLabel: "N4 高敏感高反应型",
+        shortDesc: "对压力和不确定高度敏感，容易产生强烈的情绪反应。",
+        abilityKeywords: ["风险预警", "情绪洞察", "安全需求识别"]
+      }
+    }
+  };
+
+  function clamp(x, min, max) {
+    return Math.max(min, Math.min(max, x));
+  }
+
+  function scoreBigFive() {
+    const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+    const selectedAbs = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+
+    traits.forEach(tr => {
+      if (!selectedMap[tr.id]) return;
       dims.forEach(d => {
-        const sel = selectedAbs[d];
-        let norm01;
-        if (sel === 0) {
-          // 没有任何与该维相关的词被选中 → 暂视为 0.5 中性，并在需要时可用 coverage 标记信息不足
-          norm01 = 0.5;
-        } else {
-          let normSigned = raw[d] / sel;   // [-1,1]
-          normSigned = clamp(normSigned, -1, 1);
-          norm01 = (normSigned + 1) / 2;   // [0,1]
-        }
-
-        let stage = 1;
-        if (norm01 >= 0.65) stage = 4;
-        else if (norm01 >= 0.5) stage = 3;
-        else if (norm01 >= 0.35) stage = 2;
-
-        const coverage = totalAbs[d] === 0 ? 0 : (sel / totalAbs[d]);
-
-        result[d] = {
-          raw: raw[d],
-          norm: norm01,
-          stage: stage,
-          coverage: coverage
-        };
-      });
-
-      return result;
-    }
-
-    // ===== 5. 全局 MBTI / PI / 颜色 / PDP 推断 + 大五整体文本 =====
-    function inferGlobalMBTI(scores) {
-      const O = scores.O.norm;
-      const C = scores.C.norm;
-      const E = scores.E.norm;
-      const A = scores.A.norm;
-
-      const ei = E >= 0.5 ? "E" : "I";
-      const sn = O >= 0.5 ? "N" : "S";
-      const tf = A >= 0.5 ? "F" : "T";
-      const jp = C >= O ? "J" : "P";
-
-      const type = ei + sn + tf + jp;
-      const explanation =
-        "该类型为基于大五轮廓的近似推断：E/I 来自外向性，S/N 来自开放性，T/F 来自宜人性高低，J/P 由尽责性相对开放性的高低推断，仅供参考，不等同于正式 MBTI 测验结果。";
-
-      return { type, explanation };
-    }
-
-    function inferGlobalPI(scores) {
-      const O = scores.O.norm;
-      const C = scores.C.norm;
-      const E = scores.E.norm;
-      const A = scores.A.norm;
-
-      const a_pi = clamp(0.6 * (1 - A) + 0.4 * E, 0, 1);
-      const b_pi = clamp(E, 0, 1);
-      const c_pi = clamp(C, 0, 1);
-      const d_pi = clamp(0.5 * C + 0.5 * (1 - O), 0, 1);
-
-      function levelLabel(v) {
-        if (v < 0.35) return "偏低";
-        if (v > 0.65) return "偏高";
-        return "中等";
-      }
-      function levelCode(v) {
-        if (v < 0.35) return "低";
-        if (v > 0.65) return "高";
-        return "中";
-      }
-
-      const code =
-        "A" + levelCode(a_pi) +
-        "-B" + levelCode(b_pi) +
-        "-C" + levelCode(c_pi) +
-        "-D" + levelCode(d_pi);
-
-      const summary =
-        "A（主导）" + levelLabel(a_pi) +
-        "，B（外向）" + levelLabel(b_pi) +
-        "，C（耐心）" + levelLabel(c_pi) +
-        "，D（严谨）" + levelLabel(d_pi) +
-        "（代码：" + code + "，为基于大五的近似推断，不等同于正式 PI 报告）。";
-
-      return {
-        A: a_pi,
-        B: b_pi,
-        C: c_pi,
-        D: d_pi,
-        code,
-        summary
-      };
-    }
-
-    function inferGlobalColor(scores) {
-      const O = scores.O.norm;
-      const C = scores.C.norm;
-      const E = scores.E.norm;
-      const A = scores.A.norm;
-
-      const redScore = clamp(0.6 * E + 0.4 * (1 - A), 0, 1);
-      const yellowScore = clamp(O, 0, 1);
-      const greenScore = clamp(A, 0, 1);
-      const blueScore = clamp(C, 0, 1);
-
-      const arr = [
-        { key: "红色型", score: redScore },
-        { key: "黄色型", score: yellowScore },
-        { key: "绿色型", score: greenScore },
-        { key: "蓝色型", score: blueScore }
-      ];
-      arr.sort((a, b) => b.score - a.score);
-      const primary = arr[0];
-
-      let desc = "";
-      if (primary.key === "红色型") {
-        desc = "偏行动与主导，重结果和推进速度。";
-      } else if (primary.key === "黄色型") {
-        desc = "偏开放与创意，喜欢尝新和构想可能性。";
-      } else if (primary.key === "绿色型") {
-        desc = "较重视关系与合作，关注和谐与共赢。";
-      } else if (primary.key === "蓝色型") {
-        desc = "偏严谨与规则，关注细节、结构和稳定。";
-      }
-
-      return {
-        color: primary.key,
-        summary: "颜色心理学近似类型：" + primary.key + "（" + desc + "该推断基于大五轮廓的简单映射，仅供参考）。"
-      };
-    }
-
-    function inferGlobalPDP(pi) {
-      const A = pi.A;
-      const B = pi.B;
-      const C = pi.C;
-      const D = pi.D;
-
-      const tigerScore   = 0.5 * A + 0.3 * D + 0.2 * B - 0.2 * C;
-      const peacockScore = 0.5 * B + 0.3 * A - 0.2 * C - 0.1 * D;
-      const koalaScore   = 0.5 * C + 0.3 * (1 - A) + 0.2 * (1 - D);
-      const owlScore     = 0.5 * D + 0.3 * C + 0.2 * (1 - B);
-
-      const arr = [
-        { key: "老虎型", score: tigerScore },
-        { key: "孔雀型", score: peacockScore },
-        { key: "考拉型", score: koalaScore },
-        { key: "猫头鹰型", score: owlScore }
-      ];
-      arr.sort((a, b) => b.score - a.score);
-      const primary = arr[0];
-
-      let desc = "";
-      if (primary.key === "老虎型") {
-        desc = "偏目标导向和驱动力，重掌控和推进。";
-      } else if (primary.key === "孔雀型") {
-        desc = "偏表现与影响力，重社交和氛围。";
-      } else if (primary.key === "考拉型") {
-        desc = "偏温和与稳定，重关系和支持性。";
-      } else if (primary.key === "猫头鹰型") {
-        desc = "偏理性与严谨，重分析和准确性。";
-      }
-
-      return {
-        animal: primary.key,
-        summary: "PDP 动物近似类型：" + primary.key + "（" + desc + "该推断为基于近似 PI 轮廓的推演，不等同于正式 PDP 测评结果）。"
-      };
-    }
-
-    function buildBig5Narrative(scores) {
-      const order = ["O", "C", "E", "A", "N"];
-      const summaries = [];
-      const abilities = [];
-
-      order.forEach(dim => {
-        const info = scores[dim];
-        const profile = profiles[dim][info.stage];
-
-        let s = profile.big5Summary || "";
-        s = s.replace(/。$/u, "");
-        summaries.push(s);
-
-        if (Array.isArray(profile.abilitySummary)) {
-          abilities.push(...profile.abilitySummary);
+        const w = tr.weights[d] || 0;
+        const aw = Math.abs(w);
+        if (aw > 0) {
+          raw[d] += w;
+          selectedAbs[d] += aw;
         }
       });
+    });
 
-      const numberedLines = summaries.map((text, idx) => {
-        return (idx + 1) + "．" + text + "。";
-      });
-
-      const narrative =
-        "你的整体画像大致为：\n" +
-        numberedLines.join("\n");
-
-      const uniqueAbilities = Array.from(new Set(abilities));
-      const abilityText =
-        "您目前较突出的能力关键词包括：" +
-        uniqueAbilities.join("，") +
-        "（可作为后续成长与使用优势的着力点）。";
-
-      return { narrative, abilityText };
-    }
-
-    // ===== 6. 渲染结果 & 雷达图 =====
-    let big5Chart = null;
-
-    function renderResult(scores) {
-      const container = document.getElementById("resultContainer");
-      const content = document.getElementById("resultContent");
-      content.innerHTML = "";
-      container.style.display = "block";
-
-      const big5Info = buildBig5Narrative(scores);
-      const big5Block = document.createElement("div");
-      big5Block.className = "section-block";
-
-      const big5Title = document.createElement("div");
-      big5Title.className = "section-title";
-      big5Title.textContent = "大五整体画像（人格 + 能力）";
-      big5Block.appendChild(big5Title);
-
-      const p1 = document.createElement("div");
-      p1.className = "small";
-      p1.textContent = big5Info.narrative;
-      big5Block.appendChild(p1);
-
-      const p2 = document.createElement("div");
-      p2.className = "small";
-      p2.textContent = big5Info.abilityText;
-      big5Block.appendChild(p2);
-
-      content.appendChild(big5Block);
-
-      const globalMBTI = inferGlobalMBTI(scores);
-      const globalPI = inferGlobalPI(scores);
-      const globalColor = inferGlobalColor(scores);
-      const globalPDP = inferGlobalPDP(globalPI);
-
-      const globalBlock = document.createElement("div");
-      globalBlock.className = "section-block";
-
-      const globalTitle = document.createElement("div");
-      globalTitle.className = "section-title";
-      globalTitle.textContent = "全局类型推断（MBTI / PI / 颜色 / PDP，仅供参考）";
-      globalBlock.appendChild(globalTitle);
-
-      const mbtiLine = document.createElement("div");
-      mbtiLine.className = "small";
-      mbtiLine.textContent =
-        "MBTI 近似类型：" + globalMBTI.type + "。" + globalMBTI.explanation;
-      globalBlock.appendChild(mbtiLine);
-
-      const piLine = document.createElement("div");
-      piLine.className = "small";
-      piLine.textContent = "PI 近似轮廓：" + globalPI.summary;
-      globalBlock.appendChild(piLine);
-
-      const colorLine = document.createElement("div");
-      colorLine.className = "small";
-      colorLine.textContent = globalColor.summary;
-      globalBlock.appendChild(colorLine);
-
-      const pdpLine = document.createElement("div");
-      pdpLine.className = "small";
-      pdpLine.textContent = globalPDP.summary;
-      globalBlock.appendChild(pdpLine);
-
-      content.appendChild(globalBlock);
-
-      const extra = document.createElement("div");
-      extra.className = "extra-block";
-
-      const extraTitle = document.createElement("div");
-      extraTitle.className = "section-title";
-      extraTitle.textContent = "维度级扩展说明（MBTI / PI / 颜色心理学 / PDP 映射）";
-      extra.appendChild(extraTitle);
-
-      ["O", "C", "E", "A", "N"].forEach(dim => {
-        const info = scores[dim];
-        const profile = profiles[dim][info.stage];
-
-        const line = document.createElement("div");
-        line.className = "small";
-        line.textContent =
-          dimensionMeta[dim].name + " - " + profile.stageLabel +
-          "： MBTI：" + profile.mbtiMapping +
-          "； PI：" + profile.piMapping +
-          "； 颜色：" + profile.color +
-          "； PDP：" + profile.pdp;
-        extra.appendChild(line);
-      });
-
-      content.appendChild(extra);
-
-      const ctx = document.getElementById("big5Chart").getContext("2d");
-      const labels = ["开放性 O", "尽责性 C", "外向性 E", "宜人性 A", "情绪稳定性 N"];
-      const data = ["O", "C", "E", "A", "N"].map(dim => scores[dim].norm);
-
-      if (big5Chart) {
-        big5Chart.destroy();
+    const result = {};
+    dims.forEach(d => {
+      const sel = selectedAbs[d];
+      let norm01;
+      if (sel === 0) {
+        norm01 = 0.5; // 信息不足 → 视为中性
+      } else {
+        let signed = raw[d] / sel;
+        signed = clamp(signed, -1, 1);
+        norm01 = (signed + 1) / 2; // 映射到 [0,1]
       }
 
-      big5Chart = new Chart(ctx, {
-        type: "radar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "大五得分（0–1）",
-            data: data,
-            fill: true,
-            backgroundColor: "rgba(37,99,235,0.15)",
-            borderColor: "#2563eb",
-            pointBackgroundColor: "#2563eb",
-            pointRadius: 3
-          }]
+      let stage = 1;
+      if (norm01 >= 0.65) stage = 4;
+      else if (norm01 >= 0.5) stage = 3;
+      else if (norm01 >= 0.35) stage = 2;
+
+      result[d] = {
+        norm01,
+        stage,
+        profile: profiles[d][stage]
+      };
+    });
+
+    return result;
+  }
+
+  // ======== Radar 图渲染 ========
+
+  function renderRadar(scores) {
+    const ctx = document.getElementById("radarChart");
+    if (!ctx) return;
+    const data = dims.map(d => Math.round(scores[d].norm01 * 100));
+
+    if (radarChartInstance) {
+      radarChartInstance.destroy();
+    }
+
+    radarChartInstance = new Chart(ctx, {
+      type: "radar",
+      data: {
+        labels: ["开放 O", "尽责 C", "外向 E", "宜人 A", "情绪稳定 N"],
+        datasets: [
+          {
+            label: "大五维度（0–100）",
+            data: [data[0], data[1], data[2], data[3], data[4]],
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              suggestedMin: 0,
-              suggestedMax: 1,
-              ticks: {
-                stepSize: 0.25
-              }
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
+        scales: {
+          r: {
+            suggestedMin: 0,
+            suggestedMax: 100,
+            ticks: {
+              stepSize: 20,
+              display: true
+            },
+            pointLabels: {
+              font: { size: 11 }
             }
           }
         }
-      });
+      }
+    });
+  }
 
-      container.scrollIntoView({ behavior: "smooth" });
+  // ======== 全局 MBTI / PI / 颜色 / PDP 推断 ========
+
+  function inferMBTI(scores) {
+    const O = scores.O.norm01;
+    const C = scores.C.norm01;
+    const E = scores.E.norm01;
+    const A = scores.A.norm01;
+    const N = scores.N.norm01;
+
+    function dimLetter(val, high, low) {
+      if (val >= 0.55) return high;
+      if (val <= 0.45) return low;
+      return high + "/" + low;
     }
 
-    // ===== 7. 导航与提交（一次测评，不重复计算）=====
-    renderForm();
+    const ei = dimLetter(E, "E", "I");
+    const sn = dimLetter(O, "N", "S");
+    const tf = dimLetter(A, "F", "T");
+    const jpIndex = C - O;
+    let jp;
+    if (jpIndex >= 0.05) jp = "J";
+    else if (jpIndex <= -0.05) jp = "P";
+    else jp = "J/P";
 
-    document.getElementById("prevBtn").addEventListener("click", () => {
-      if (hasSubmitted) return;
-      if (currentPage > 0) {
-        showPage(currentPage - 1);
-      }
+    const mbti = `${ei}${sn}${tf}${jp}`;
+    let note = "此类型为基于大五维度的近似推断，仅供参考。";
+
+    return { mbti, note };
+  }
+
+  function inferPI(scores) {
+    const O = scores.O.norm01;
+    const C = scores.C.norm01;
+    const E = scores.E.norm01;
+    const A = scores.A.norm01;
+    const N = scores.N.norm01;
+
+    // 近似：A 维度=支配/自我主张（低宜人+高外向）
+    const A_pi = clamp(0.6 * (1 - A) + 0.4 * E, 0, 1);
+    // B=外向
+    const B_pi = clamp(E, 0, 1);
+    // C=耐心/稳定（低外向+高尽责+低神经）
+    const C_pi = clamp(0.5 * (1 - E) + 0.3 * C + 0.2 * (1 - N), 0, 1);
+    // D=严谨/形式化（高尽责+低开放）
+    const D_pi = clamp(0.6 * C + 0.4 * (1 - O), 0, 1);
+
+    function level(v) {
+      if (v >= 0.7) return "高";
+      if (v <= 0.3) return "低";
+      return "中等";
+    }
+
+    const note = `A（支配/主导）${level(A_pi)}，B（外向/表达）${level(B_pi)}，C（耐心/节奏）${level(C_pi)}，D（严谨/规范）${level(D_pi)}。`;
+
+    return {
+      scores: { A: A_pi, B: B_pi, C: C_pi, D: D_pi },
+      note
+    };
+  }
+
+  function inferColorAndPDP(scores, pi) {
+    const O = scores.O.norm01;
+    const C = scores.C.norm01;
+    const E = scores.E.norm01;
+    const A = scores.A.norm01;
+    const N = scores.N.norm01;
+
+    // 粗略映射：黄 = 高 O/E；红 = 高 PI.A；蓝 = 高 PI.D；绿 = 高 A & 高 N
+    const yellowIdx = 0.6 * O + 0.4 * E;
+    const redIdx = pi.scores.A;
+    const blueIdx = pi.scores.D;
+    const greenIdx = 0.6 * A + 0.4 * N;
+
+    const arr = [
+      { key: "yellow", val: yellowIdx },
+      { key: "red", val: redIdx },
+      { key: "blue", val: blueIdx },
+      { key: "green", val: greenIdx }
+    ].sort((a, b) => b.val - a.val);
+
+    const top = arr[0].key;
+    let colorLabel = "";
+    let colorNote = "";
+    let pdpAnimal = "";
+
+    if (top === "yellow") {
+      colorLabel = "黄色（乐观、创意、体验导向）";
+      colorNote = "更像是以点子和体验驱动的人，重视新鲜感和人际互动。";
+      pdpAnimal = "孔雀型";
+    } else if (top === "red") {
+      colorLabel = "红色（主导、推进、结果导向）";
+      colorNote = "更像是目标和结果驱动，倾向于主动掌控局面。";
+      pdpAnimal = "老虎型";
+    } else if (top === "blue") {
+      colorLabel = "蓝色（理性、规范、结构导向）";
+      colorNote = "更看重规则、准确和可靠性。";
+      pdpAnimal = "猫头鹰型";
+    } else {
+      colorLabel = "绿色（支持、配合、关系导向）";
+      colorNote = "更注重照顾他人感受与长期稳定关系。";
+      pdpAnimal = "考拉型";
+    }
+
+    return { colorLabel, colorNote, pdpAnimal };
+  }
+
+  // ======== 全局文本生成 ========
+
+  function buildBig5Narrative(scores) {
+    const order = ["O", "C", "E", "A", "N"];
+    const items = order.map(d => scores[d].profile.shortDesc);
+    const numbered = items.map((text, idx) => `${idx + 1}、${text}`).join("；\n");
+
+    const abilitySet = new Set();
+    order.forEach(d => {
+      scores[d].profile.abilityKeywords.forEach(k => abilitySet.add(k));
     });
 
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      if (hasSubmitted) {
-        alert("本次测评结果已生成。如需重新测评，请刷新页面。");
-        return;
-      }
+    const abilityText = Array.from(abilitySet).join("，");
 
-      if (currentPage < totalPages - 1) {
-        showPage(currentPage + 1);
-      } else {
-        const checkedCount = document.querySelectorAll(
-          '#traitForm input[type="checkbox"]:checked'
-        ).length;
+    return `
+你的整体画像大致为：
+${numbered}。
+您目前较突出的能力关键词包括：${abilityText}（可作为后续成长与使用优势的着力点）。`.trim();
+  }
 
-        if (checkedCount < MIN_SELECTED) {
-          alert(
-            "当前选择的词语过少（" + checkedCount +
-            " 个），请至少选择 " + MIN_SELECTED +
-            " 个更符合自己的描述，再提交。"
-          );
-          return;
-        }
-        if (checkedCount > MAX_SELECTED) {
-          alert(
-            "当前选择的词语过多（" + checkedCount +
-            " 个），建议只勾选最符合自己的描述，不要超过 " +
-            MAX_SELECTED + " 个。"
-          );
-          return;
-        }
-
-        const scores = computeScores();
-        renderResult(scores);
-        hasSubmitted = true;
-        document.getElementById("prevBtn").disabled = true;
-        document.getElementById("nextBtn").disabled = true;
-        document.getElementById("nextBtn").textContent = "已提交";
-      }
+  function buildPerDimSummary(scores) {
+    const lines = [];
+    dims.forEach(d => {
+      const s = scores[d];
+      lines.push(
+        `<li><strong>${dimNames[d]}：${s.profile.stageLabel}</strong> —— ${s.profile.shortDesc}</li>`
+      );
     });
-  </script>
+    return `<ul class="dim-list">${lines.join("")}</ul>`;
+  }
+
+  function buildGlobalTypeSection(scores) {
+    const mbtiRes = inferMBTI(scores);
+    const piRes = inferPI(scores);
+    const colorRes = inferColorAndPDP(scores, piRes);
+
+    const pi = piRes.scores;
+
+    const piText = `A=${(pi.A * 100).toFixed(0)}，B=${(pi.B * 100).toFixed(0)}，C=${(pi.C * 100).toFixed(0)}，D=${(pi.D * 100).toFixed(0)}（0–100，相对强度）`;
+
+    return `
+      <div class="result-block">
+        <h3>全局类型推断（仅供参考）</h3>
+        <p><strong>MBTI：</strong> 近似映射为 <strong>${mbtiRes.mbti}</strong>。${mbtiRes.note}</p>
+        <p><strong>PI 行为风格：</strong> ${piText}。${piRes.note}</p>
+        <p><strong>颜色心理学：</strong> 更接近 <strong>${colorRes.colorLabel}</strong>，${colorRes.colorNote}</p>
+        <p><strong>PDP 动物类型：</strong> 近似为 <strong>${colorRes.pdpAnimal}</strong>（仅作为风格联想，不能代替正式测评）。</p>
+      </div>
+    `;
+  }
+
+  function buildConsistencyBlock(consistency) {
+    const { conflictCount, conflicts } = consistency;
+    if (conflictCount === 0) {
+      return `
+        <div class="result-block">
+          <h3>选词一致性</h3>
+          <p><span class="badge badge-success">较高</span> 你的选词基本没有明显相反的词组，结果可信度较高。</p>
+        </div>
+      `;
+    }
+
+    let levelBadge, levelText;
+    if (conflictCount <= 2) {
+      levelBadge = `<span class="badge badge-warning">中等</span>`;
+      levelText = "存在少量方向相反的词，可能反映你在不同情境或角色下的不同表现，请结合自我感受理解结果。";
+    } else {
+      levelBadge = `<span class="badge badge-danger">偏低</span>`;
+      levelText = "存在多组明显相反的词，本次测评结果可能不够稳定，建议你回看选项，尽量只保留「长期、典型的自己」，而不是短期状态。";
+    }
+
+    const examples = conflicts.slice(0, 4).map(p => `${p.aLabel} / ${p.bLabel}`).join("；");
+
+    return `
+      <div class="result-block">
+        <h3>选词一致性</h3>
+        <p>${levelBadge} 检测到 <strong>${conflictCount}</strong> 组方向相反的词语组合。</p>
+        <p>示例：${examples}</p>
+        <p>${levelText}</p>
+      </div>
+    `;
+  }
+
+  // ======== 提交 & 结果渲染 ========
+
+  function handleSubmit(isRecalc = false) {
+    const selectedCount = Object.values(selectedMap).filter(Boolean).length;
+    if (selectedCount < MIN_SELECTED) {
+      alert(`请至少选择 ${MIN_SELECTED} 个「像我」的词语，目前只选了 ${selectedCount} 个。`);
+      return;
+    }
+
+    const scores = scoreBigFive();
+    const consistency = checkConsistency();
+
+    hasSubmitted = true;
+    statusHint.textContent = "已生成结果，可调整勾选后再次点击「重新根据当前选项计算结果」。";
+    recalcBtn.style.display = "inline-flex";
+
+    // 更新按钮状态：上一页可用，“已提交”置灰
+    prevBtn.disabled = false;
+    nextBtn.disabled = true;
+    nextBtn.textContent = "已提交";
+
+    // 构建结果 HTML
+    const big5Narrative = buildBig5Narrative(scores);
+    const perDimHtml = buildPerDimSummary(scores);
+    const typeHtml = buildGlobalTypeSection(scores);
+    const consistencyHtml = buildConsistencyBlock(consistency);
+
+    resultContent.innerHTML = `
+      <div class="radar-wrapper result-block">
+        <canvas id="radarChart"></canvas>
+      </div>
+      ${consistencyHtml}
+      <div class="result-block">
+        <h3>大五整体画像（人格 + 能力）</h3>
+        <p>${big5Narrative.replace(/\n/g, "<br />")}</p>
+      </div>
+      <div class="result-block">
+        <h3>各维度分级</h3>
+        ${perDimHtml}
+      </div>
+      ${typeHtml}
+    `;
+
+    renderRadar(scores);
+  }
+
+  // ======== 初始化 ========
+
+  renderPage(0);
+</script>
 </body>
 </html>
