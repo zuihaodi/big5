@@ -18,14 +18,12 @@
       --success: #047857;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, -system-ui,
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
         "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       background: radial-gradient(circle at top left, #e0f2fe, #eef2ff 35%, #f9fafb 70%);
       color: var(--text-main);
@@ -140,10 +138,7 @@
       cursor: pointer;
     }
 
-    .trait-label {
-      flex: 1;
-      cursor: pointer;
-    }
+    .trait-label { flex: 1; cursor: pointer; }
 
     .trait-label-main {
       font-weight: 500;
@@ -185,7 +180,8 @@
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+      transition: background 0.15s ease, color 0.15s ease,
+                  box-shadow 0.15s ease, transform 0.05s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -209,9 +205,7 @@
       color: #111827;
     }
 
-    .btn-secondary:hover {
-      background: #d1d5db;
-    }
+    .btn-secondary:hover { background: #d1d5db; }
 
     .btn-ghost {
       background: transparent;
@@ -276,20 +270,9 @@
       margin-left: 6px;
     }
 
-    .badge-warning {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .badge-danger {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .badge-success {
-      background: #dcfce7;
-      color: #166534;
-    }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-success { background: #dcfce7; color: #166534; }
 
     .radar-wrapper {
       width: 100%;
@@ -309,40 +292,17 @@
         border-radius: 0;
         box-shadow: none;
       }
-
-      .main-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .left-panel, .right-panel {
-        padding: 10px 10px 12px;
-      }
-
-      .title {
-        font-size: 20px;
-      }
-
-      .subtitle {
-        font-size: 13px;
-      }
-
+      .main-layout { grid-template-columns: 1fr; }
+      .left-panel, .right-panel { padding: 10px 10px 12px; }
+      .title { font-size: 20px; }
+      .subtitle { font-size: 13px; }
       .trait-item {
         font-size: 14px;
         padding: 8px 10px;
       }
-
-      .trait-label-sub {
-        font-size: 12px;
-      }
-
-      .traits-grid {
-        max-height: none;
-      }
-
-      button {
-        font-size: 13px;
-        padding: 8px 14px;
-      }
+      .trait-label-sub { font-size: 12px; }
+      .traits-grid { max-height: none; }
+      button { font-size: 13px; padding: 8px 14px; }
     }
 
     @media (max-width: 480px) {
@@ -408,428 +368,103 @@
   </div>
 </div>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // ======== 基础数据：80 个中性/正向词汇 + 五维权重 ========
-
-  const dims = ["O", "C", "E", "A", "N"]; // 开放性、尽责性、外向性、宜人性、情绪稳定(反向N)
+  const dims = ["O", "C", "E", "A", "N"]; // 开放、尽责、外向(社交活力)、宜人、情绪敏感度
 
   const traits = [
-    // 1–10：动力与主张 (E+ / A-)
-    {
-      id: "t1",
-      label: "好胜的（有竞争心，喜欢赢）",
-      weights: { A: -0.6, E: 0.4, C: 0.3, O: 0, N: 0 }
-    },
-    {
-      id: "t2",
-      label: "坚定的（主见明确，敢于表达立场）",
-      weights: { E: 0.7, N: -0.3, A: -0.2, O: 0, C: 0 }
-    },
-    {
-      id: "t3",
-      label: "直率的（说话直接，不太拐弯）",
-      weights: { A: -0.5, E: 0.3, O: 0.2, C: 0, N: 0 }
-    },
-    {
-      id: "t4",
-      label: "有野心的（对目标有追求）",
-      weights: { C: 0.6, E: 0.4, A: -0.2, O: 0, N: 0 }
-    },
-    {
-      id: "t5",
-      label: "敢言的（愿意表达真实看法）",
-      weights: { E: 0.6, A: -0.3, O: 0.3, C: 0, N: 0 }
-    },
-    {
-      id: "t6",
-      label: "独立的（习惯自己做决定）",
-      weights: { A: -0.3, E: -0.2, O: 0.4, C: 0, N: 0 }
-    },
-    {
-      id: "t7",
-      label: "严厉的（标准高，要求严格）",
-      weights: { C: 0.5, A: -0.5, E: 0, O: 0, N: 0 }
-    },
-    {
-      id: "t8",
-      label: "怀疑的（习惯多问几个为什么）",
-      weights: { A: -0.4, O: 0.4, C: 0.2, E: 0, N: 0 }
-    },
-    {
-      id: "t9",
-      label: "支配的（喜欢掌控局面）",
-      weights: { E: 0.8, A: -0.4, C: 0, O: 0, N: 0 }
-    },
-    {
-      id: "t10",
-      label: "务实的（关注现实与可行性）",
-      weights: { O: -0.5, C: 0.4, E: 0, A: 0, N: 0 }
-    },
+    // 1–10：动力与主张
+    { id: "t1", label: "好胜的（有竞争心，喜欢赢）", weights: { A: -0.6, E: 0.4, C: 0.3, O: 0,   N: 0   } },
+    { id: "t2", label: "坚定的（主见明确，敢于表达立场）", weights: { E: 0.7, N: -0.3, A: -0.2, O: 0,   C: 0   } },
+    { id: "t3", label: "直率的（说话直接，不太拐弯）", weights: { A: -0.5, E: 0.3, O: 0.2, C: 0,   N: 0   } },
+    { id: "t4", label: "有野心的（对目标有追求）", weights: { C: 0.6, E: 0.4, A: -0.2, O: 0,   N: 0   } },
+    { id: "t5", label: "敢言的（愿意表达真实看法）", weights: { E: 0.6, A: -0.3, O: 0.3, C: 0,   N: 0   } },
+    { id: "t6", label: "独立的（习惯自己做决定）", weights: { A: -0.3, E: -0.2, O: 0.4, C: 0,   N: 0   } },
+    { id: "t7", label: "严厉的（标准高，要求严格）", weights: { C: 0.5, A: -0.5, E: 0,   O: 0,   N: 0   } },
+    { id: "t8", label: "怀疑的（习惯多问几个为什么）", weights: { A: -0.4, O: 0.4, C: 0.2, E: 0,   N: 0   } },
+    { id: "t9", label: "支配的（喜欢掌控局面）", weights: { E: 0.8, A: -0.4, C: 0,   O: 0,   N: 0   } },
+    { id: "t10", label: "务实的（关注现实与可行性）", weights: { O: -0.5, C: 0.4, E: 0,   A: 0,   N: 0   } },
 
-    // 11–20：灵活与自由 (C- / O+)
-    {
-      id: "t11",
-      label: "随性的（不太按固定计划来）",
-      weights: { C: -0.6, E: 0.4, O: 0.3, A: 0, N: 0 }
-    },
-    {
-      id: "t12",
-      label: "灵活的（容易变通和调整）",
-      weights: { C: -0.4, A: 0.3, O: 0.3, E: 0, N: 0 }
-    },
-    {
-      id: "t13",
-      label: "即兴的（喜欢临场发挥）",
-      weights: { C: -0.5, O: 0.5, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t14",
-      label: "悠闲的（节奏慢，不太紧绷）",
-      weights: { C: -0.7, N: -0.3, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t15",
-      label: "享乐的（重视当下享受）",
-      weights: { C: -0.5, E: 0.4, O: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t16",
-      label: "反传统的（不太按常规来）",
-      weights: { O: 0.7, C: -0.3, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t17",
-      label: "梦幻的（容易沉浸在想象中）",
-      weights: { O: 0.6, C: -0.4, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t18",
-      label: "随和的（好说话，不太较真）",
-      weights: { A: 0.5, C: -0.3, N: -0.4, O: 0, E: 0 }
-    },
-    {
-      id: "t19",
-      label: "多变的（容易改变兴趣或想法）",
-      weights: { C: -0.4, O: 0.4, N: 0.2, E: 0, A: 0 }
-    },
-    {
-      id: "t20",
-      label: "大胆的（愿意尝试有风险的选择）",
-      weights: { E: 0.5, C: -0.2, O: 0.4, A: 0, N: 0 }
-    },
+    // 11–20：灵活与自由
+    { id: "t11", label: "随性的（不太按固定计划来）", weights: { C: -0.6, E: 0.4, O: 0.3, A: 0,   N: 0   } },
+    { id: "t12", label: "灵活的（容易变通和调整）", weights: { C: -0.4, A: 0.3, O: 0.3, E: 0,   N: 0   } },
+    { id: "t13", label: "即兴的（喜欢临场发挥）", weights: { C: -0.5, O: 0.5, E: 0,   A: 0,   N: 0   } },
+    { id: "t14", label: "悠闲的（节奏慢，不太紧绷）", weights: { C: -0.7, N: -0.3, O: 0,   E: 0,   A: 0   } },
+    { id: "t15", label: "享乐的（重视当下享受）", weights: { C: -0.5, E: 0.4, O: 0,   A: 0,   N: 0   } },
+    { id: "t16", label: "反传统的（不太按常规来）", weights: { O: 0.7, C: -0.3, E: 0,   A: 0,   N: 0   } },
+    { id: "t17", label: "梦幻的（容易沉浸在想象中）", weights: { O: 0.6, C: -0.4, E: 0,   A: 0,   N: 0   } },
+    { id: "t18", label: "随和的（好说话，不太较真）", weights: { A: 0.5, C: -0.3, N: -0.4, O: 0,   E: 0   } },
+    { id: "t19", label: "多变的（容易改变兴趣或想法）", weights: { C: -0.4, O: 0.4, N: 0.2,  E: 0,   A: 0   } },
+    { id: "t20", label: "大胆的（愿意尝试有风险的选择）", weights: { E: 0.5, C: -0.2, O: 0.4, A: 0,   N: 0   } },
 
-    // 21–30：敏感与深度 (N+ / O+)
-    {
-      id: "t21",
-      label: "敏感的（对细微变化很有感觉）",
-      weights: { N: 0.6, O: 0.3, A: 0.2, C: 0, E: 0 }
-    },
-    {
-      id: "t22",
-      label: "感性的（容易被情绪和氛围打动）",
-      weights: { N: 0.7, A: 0.3, O: 0, C: 0, E: 0 }
-    },
-    {
-      id: "t23",
-      label: "热烈的（情感外露，表达强烈）",
-      weights: { N: 0.5, E: 0.4, O: 0.3, C: 0, A: 0 }
-    },
-    {
-      id: "t24",
-      label: "自省的（常常回顾和反思自己）",
-      weights: { E: -0.5, N: 0.3, O: 0.3, C: 0, A: 0 }
-    },
-    {
-      id: "t25",
-      label: "警觉的（对风险和细节很敏锐）",
-      weights: { N: 0.5, C: 0.3, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t26",
-      label: "追求完美的（希望事情做到更好）",
-      weights: { C: 0.5, N: 0.4, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t27",
-      label: "怀旧的（容易被回忆触动）",
-      weights: { N: 0.3, O: 0.2, A: 0.2, C: 0, E: 0 }
-    },
-    {
-      id: "t28",
-      label: "谨慎的（做决定前会多想一步）",
-      weights: { C: 0.3, N: 0.4, O: -0.3, E: 0, A: 0 }
-    },
-    {
-      id: "t29",
-      label: "复杂的（内心活动丰富）",
-      weights: { O: 0.6, N: 0.3, C: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t30",
-      label: "谦卑的（为人低调不张扬）",
-      weights: { A: 0.5, E: -0.3, N: 0.2, O: 0, C: 0 }
-    },
+    // 21–30：敏感与深度
+    { id: "t21", label: "敏感的（对细微变化很有感觉）", weights: { N: 0.6, O: 0.3, A: 0.2,  C: 0,   E: 0   } },
+    { id: "t22", label: "感性的（容易被情绪和氛围打动）", weights: { N: 0.7, A: 0.3, O: 0,   C: 0,   E: 0   } },
+    { id: "t23", label: "热烈的（情感外露，表达强烈）", weights: { N: 0.5, E: 0.4, O: 0.3, C: 0,   A: 0   } },
+    { id: "t24", label: "自省的（常常回顾和反思自己）", weights: { E: -0.5, N: 0.3, O: 0.3, C: 0,   A: 0   } },
+    { id: "t25", label: "警觉的（对风险和细节很敏锐）", weights: { N: 0.5, C: 0.3, O: 0,   E: 0,   A: 0   } },
+    { id: "t26", label: "追求完美的（希望事情做到更好）", weights: { C: 0.5, N: 0.4, O: 0,   E: 0,   A: 0   } },
+    { id: "t27", label: "怀旧的（容易被回忆触动）", weights: { N: 0.3, O: 0.2, A: 0.2,  C: 0,   E: 0   } },
+    { id: "t28", label: "谨慎的（做决定前会多想一步）", weights: { C: 0.3, N: 0.4, O: -0.3, E: 0,   A: 0   } },
+    { id: "t29", label: "复杂的（内心活动丰富）", weights: { O: 0.6, N: 0.3, C: 0,   E: 0,   A: 0   } },
+    { id: "t30", label: "谦卑的（为人低调不张扬）", weights: { A: 0.5, E: -0.3, N: 0.2,  O: 0,   C: 0   } },
 
-    // 31–40：社交与活力 (E+ / A+)
-    {
-      id: "t31",
-      label: "充满磁性的（容易吸引别人注意）",
-      weights: { E: 0.7, O: 0.3, C: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t32",
-      label: "健谈的（话比较多，容易聊起来）",
-      weights: { E: 0.8, C: -0.1, O: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t33",
-      label: "热情的（对人对事都比较热络）",
-      weights: { A: 0.7, E: 0.4, O: 0, C: 0, N: 0 }
-    },
-    {
-      id: "t34",
-      label: "乐于助人的（愿意为别人提供帮助）",
-      weights: { A: 0.8, C: 0.2, O: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t35",
-      label: "精力充沛的（体力与精力都比较旺）",
-      weights: { E: 0.7, C: 0.3, N: -0.2, O: 0, A: 0 }
-    },
-    {
-      id: "t36",
-      label: "有趣的（经常带来话题和笑点）",
-      weights: { E: 0.6, O: 0.3, C: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t37",
-      label: "有说服力的（讲话容易让人信服）",
-      weights: { E: 0.5, C: 0.3, A: -0.1, O: 0, N: 0 }
-    },
-    {
-      id: "t38",
-      label: "善于交际的（容易融入人群）",
-      weights: { E: 0.8, A: 0.3, C: 0, O: 0, N: 0 }
-    },
-    {
-      id: "t39",
-      label: "欢快的（情绪多偏积极、明朗）",
-      weights: { E: 0.5, N: -0.4, A: 0.3, O: 0, C: 0 }
-    },
-    {
-      id: "t40",
-      label: "宽容的（对不同意见比较包容）",
-      weights: { A: 0.7, O: 0.3, C: 0, E: 0, N: 0 }
-    },
+    // 31–40：社交与活力
+    { id: "t31", label: "充满磁性的（容易吸引别人注意）", weights: { E: 0.7, O: 0.3, C: 0,   A: 0,   N: 0   } },
+    { id: "t32", label: "健谈的（话比较多，容易聊起来）", weights: { E: 0.8, C: -0.1, O: 0,   A: 0,   N: 0   } },
+    { id: "t33", label: "热情的（对人对事都比较热络）", weights: { A: 0.7, E: 0.4, O: 0,   C: 0,   N: 0   } },
+    { id: "t34", label: "乐于助人的（愿意为别人提供帮助）", weights: { A: 0.8, C: 0.2, O: 0,   E: 0,   N: 0   } },
+    { id: "t35", label: "精力充沛的（体力与精力都比较旺）", weights: { E: 0.7, C: 0.3, N: -0.2, O: 0,   A: 0   } },
+    { id: "t36", label: "有趣的（经常带来话题和笑点）", weights: { E: 0.6, O: 0.3, C: 0,   A: 0,   N: 0   } },
+    { id: "t37", label: "有说服力的（讲话容易让人信服）", weights: { E: 0.5, C: 0.3, A: -0.1, O: 0,   N: 0   } },
+    { id: "t38", label: "善于交际的（容易融入人群）", weights: { E: 0.8, A: 0.3, C: 0,   O: 0,   N: 0   } },
+    { id: "t39", label: "欢快的（情绪多偏积极、明朗）", weights: { E: 0.5, N: -0.4, A: 0.3, O: 0,   C: 0   } },
+    { id: "t40", label: "宽容的（对不同意见比较包容）", weights: { A: 0.7, O: 0.3, C: 0,   E: 0,   N: 0   } },
 
-    // 41–50：稳重与传统 (C+ / O- / N-)
-    {
-      id: "t41",
-      label: "传统的（更认同熟悉的做法）",
-      weights: { O: -0.7, C: 0.4, A: 0.2, E: 0, N: 0 }
-    },
-    {
-      id: "t42",
-      label: "有条理的（做事有计划、有次序）",
-      weights: { C: 0.8, O: -0.1, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t43",
-      label: "一贯的（风格和习惯比较稳定）",
-      weights: { C: 0.6, N: -0.3, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t44",
-      label: "现实的（很看重实际效果）",
-      weights: { O: -0.5, N: -0.3, C: 0.3, E: 0, A: 0 }
-    },
-    {
-      id: "t45",
-      label: "冷静的（遇事比较镇定）",
-      weights: { N: -0.8, A: 0.3, O: 0, C: 0, E: 0 }
-    },
-    {
-      id: "t46",
-      label: "按部就班的（按流程一步一步来）",
-      weights: { C: 0.7, O: -0.3, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t47",
-      label: "有原则的（有自己的标准和底线）",
-      weights: { C: 0.6, A: -0.2, O: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t48",
-      label: "知足的（容易满足于现状）",
-      weights: { N: -0.6, C: -0.2, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t49",
-      label: "稳健的（做事稳重、不冒进）",
-      weights: { N: -0.6, C: 0.4, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t50",
-      label: "常规的（倾向按规则办事）",
-      weights: { O: -0.6, A: 0.3, C: 0.3, E: 0, N: 0 }
-    },
+    // 41–50：稳重与传统
+    { id: "t41", label: "传统的（更认同熟悉的做法）", weights: { O: -0.7, C: 0.4, A: 0.2, E: 0,   N: 0   } },
+    { id: "t42", label: "有条理的（做事有计划、有次序）", weights: { C: 0.8, O: -0.1, E: 0,   A: 0,   N: 0   } },
+    { id: "t43", label: "一贯的（风格和习惯比较稳定）", weights: { C: 0.6, N: -0.3, O: 0,   E: 0,   A: 0   } },
+    { id: "t44", label: "现实的（很看重实际效果）", weights: { O: -0.5, N: -0.3, C: 0.3, E: 0,   A: 0   } },
+    { id: "t45", label: "冷静的（遇事比较镇定）", weights: { N: -0.8, A: 0.3, O: 0,   C: 0,   E: 0   } },
+    { id: "t46", label: "按部就班的（按流程一步一步来）", weights: { C: 0.7, O: -0.3, E: 0,   A: 0,   N: 0   } },
+    { id: "t47", label: "有原则的（有自己的标准和底线）", weights: { C: 0.6, A: -0.2, O: 0,   E: 0,   N: 0   } },
+    { id: "t48", label: "知足的（容易满足于现状）", weights: { N: -0.6, C: -0.2, O: 0,   E: 0,   A: 0   } },
+    { id: "t49", label: "稳健的（做事稳重、不冒进）", weights: { N: -0.6, C: 0.4, O: 0,   E: 0,   A: 0   } },
+    { id: "t50", label: "常规的（倾向按规则办事）", weights: { O: -0.6, A: 0.3, C: 0.3, E: 0,   N: 0   } },
 
-    // 51–80：混合补充词
-    {
-      id: "t51",
-      label: "善解人意的（容易理解他人感受）",
-      weights: { A: 0.6, O: 0.3, C: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t52",
-      label: "注重细节的（会注意到小地方）",
-      weights: { C: 0.6, O: -0.3, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t53",
-      label: "内敛的（不太外露情绪）",
-      weights: { E: -0.6, N: -0.2, A: 0, O: 0, C: 0 }
-    },
-    {
-      id: "t54",
-      label: "理智的（以分析和道理为主）",
-      weights: { C: 0.6, N: -0.4, A: -0.3, O: 0, E: 0 }
-    },
-    {
-      id: "t55",
-      label: "有艺术感的（对美和艺术很敏感）",
-      weights: { O: 0.6, N: 0.4, C: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t56",
-      label: "老练的（做事老到，有经验感）",
-      weights: { O: 0.5, C: 0.5, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t57",
-      label: "单纯的（想法比较简单、直接）",
-      weights: { O: -0.4, A: 0.5, N: -0.3, C: 0, E: 0 }
-    },
-    {
-      id: "t58",
-      label: "坚韧的（遇到困难能扛得住）",
-      weights: { N: -0.5, C: 0.5, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t59",
-      label: "深思熟虑的（做决定前会反复权衡）",
-      weights: { C: 0.6, E: -0.4, O: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t60",
-      label: "好奇的（对新鲜事物感兴趣）",
-      weights: { O: 0.6, E: 0.4, C: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t61",
-      label: "客观的（看问题时较少带入个人好恶）",
-      weights: { A: -0.4, C: 0.5, O: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t62",
-      label: "投入的（做事时会很专注认真）",
-      weights: { C: 0.5, A: 0.5, O: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t63",
-      label: "温和的（待人不锋芒毕露）",
-      weights: { A: 0.6, E: -0.3, O: 0, C: 0, N: 0 }
-    },
-    {
-      id: "t64",
-      label: "好学的（喜欢学习新知识）",
-      weights: { O: 0.5, C: 0.5, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t65",
-      label: "朴素的（生活风格简单自然）",
-      weights: { O: -0.4, A: 0.4, E: -0.3, C: 0, N: 0 }
-    },
-    {
-      id: "t66",
-      label: "时尚的（关注形象和流行）",
-      weights: { O: 0.5, E: 0.5, C: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t67",
-      label: "公正的（在意公平和规则）",
-      weights: { C: 0.5, A: 0.5, O: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t68",
-      label: "爱幻想的（脑中常常会冒出各种点子）",
-      weights: { O: 0.6, C: -0.4, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t69",
-      label: "敏锐的（抓重点和关键很快）",
-      weights: { C: 0.5, O: 0.5, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t70",
-      label: "沉默的（不太主动说话）",
-      weights: { E: -0.6, N: 0.4, A: -0.3, O: 0, C: 0 }
-    },
-    {
-      id: "t71",
-      label: "从容的（节奏不慌不忙）",
-      weights: { N: -0.5, C: 0.4, O: 0, E: 0, A: 0 }
-    },
-    {
-      id: "t72",
-      label: "精明的（算得清、计划性强）",
-      weights: { C: 0.6, A: -0.3, O: 0, E: 0, N: 0 }
-    },
-    {
-      id: "t73",
-      label: "有创造力的（会想出新点子）",
-      weights: { O: 0.7, C: -0.3, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t74",
-      label: "顺从的（愿意配合团体安排）",
-      weights: { A: 0.6, E: -0.3, O: 0, C: 0, N: 0 }
-    },
-    {
-      id: "t75",
-      label: "自主的（喜欢按自己的想法来）",
-      weights: { A: -0.5, E: -0.3, O: 0, C: 0, N: 0 }
-    },
-    {
-      id: "t76",
-      label: "系统的（习惯从整体结构去安排事情）",
-      weights: { C: 0.6, O: -0.3, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t77",
-      label: "哲理的（喜欢思考人生和意义）",
-      weights: { O: 0.7, C: 0, E: 0, A: 0, N: 0 }
-    },
-    {
-      id: "t78",
-      label: "勇敢的（面对挑战不太退缩）",
-      weights: { N: -0.4, E: 0.6, O: 0, C: 0, A: 0 }
-    },
-    {
-      id: "t79",
-      label: "活泼的（整个人比较有活力、爱动）",
-      weights: { E: 0.7, N: -0.3, O: 0, C: 0, A: 0 }
-    },
-    {
-      id: "t80",
-      label: "真诚的（表达和内心基本一致）",
-      weights: { A: 0.6, C: 0.4, O: 0, E: 0, N: 0 }
-    }
+    // 51–80：混合补充
+    { id: "t51", label: "善解人意的（容易理解他人感受）", weights: { A: 0.6, O: 0.3, C: 0,   E: 0,   N: 0   } },
+    { id: "t52", label: "注重细节的（会注意到小地方）", weights: { C: 0.6, O: -0.3, E: 0,   A: 0,   N: 0   } },
+    { id: "t53", label: "内敛的（不太外露情绪）", weights: { E: -0.6, N: -0.2, A: 0,   O: 0,   C: 0   } },
+    { id: "t54", label: "理智的（以分析和道理为主）", weights: { C: 0.6, N: -0.4, A: -0.3, O: 0,   E: 0   } },
+    { id: "t55", label: "有艺术感的（对美和艺术很敏感）", weights: { O: 0.6, N: 0.4, C: 0,   E: 0,   A: 0   } },
+    { id: "t56", label: "老练的（做事老到，有经验感）", weights: { O: 0.5, C: 0.5, E: 0,   A: 0,   N: 0   } },
+    { id: "t57", label: "单纯的（想法比较简单、直接）", weights: { O: -0.4, A: 0.5, N: -0.3, C: 0,   E: 0   } },
+    { id: "t58", label: "坚韧的（遇到困难能扛得住）", weights: { N: -0.5, C: 0.5, O: 0,   E: 0,   A: 0   } },
+    { id: "t59", label: "深思熟虑的（做决定前会反复权衡）", weights: { C: 0.6, E: -0.4, O: 0,   A: 0,   N: 0   } },
+    { id: "t60", label: "好奇的（对新鲜事物感兴趣）", weights: { O: 0.6, E: 0.4, C: 0,   A: 0,   N: 0   } },
+    { id: "t61", label: "客观的（看问题时较少带入个人好恶）", weights: { A: -0.4, C: 0.5, O: 0,   E: 0,   N: 0   } },
+    { id: "t62", label: "投入的（做事时会很专注认真）", weights: { C: 0.5, A: 0.5, O: 0,   E: 0,   N: 0   } },
+    { id: "t63", label: "温和的（待人不锋芒毕露）", weights: { A: 0.6, E: -0.3, O: 0,   C: 0,   N: 0   } },
+    { id: "t64", label: "好学的（喜欢学习新知识）", weights: { O: 0.5, C: 0.5, E: 0,   A: 0,   N: 0   } },
+    { id: "t65", label: "朴素的（生活风格简单自然）", weights: { O: -0.4, A: 0.4, E: -0.3, C: 0,   N: 0   } },
+    { id: "t66", label: "时尚的（关注形象和流行）", weights: { O: 0.5, E: 0.5, C: 0,   A: 0,   N: 0   } },
+    { id: "t67", label: "公正的（在意公平和规则）", weights: { C: 0.5, A: 0.5, O: 0,   E: 0,   N: 0   } },
+    { id: "t68", label: "爱幻想的（脑中常常会冒出各种点子）", weights: { O: 0.6, C: -0.4, E: 0,   A: 0,   N: 0   } },
+    { id: "t69", label: "敏锐的（抓重点和关键很快）", weights: { C: 0.5, O: 0.5, E: 0,   A: 0,   N: 0   } },
+    { id: "t70", label: "沉默的（不太主动说话）", weights: { E: -0.6, N: 0.4, A: -0.3, O: 0,   C: 0   } },
+    { id: "t71", label: "从容的（节奏不慌不忙）", weights: { N: -0.5, C: 0.4, O: 0,   E: 0,   A: 0   } },
+    { id: "t72", label: "精明的（算得清、计划性强）", weights: { C: 0.6, A: -0.3, O: 0,   E: 0,   N: 0   } },
+    { id: "t73", label: "有创造力的（会想出新点子）", weights: { O: 0.7, C: -0.3, E: 0,   A: 0,   N: 0   } },
+    { id: "t74", label: "顺从的（愿意配合团体安排）", weights: { A: 0.6, E: -0.3, O: 0,   C: 0,   N: 0   } },
+    { id: "t75", label: "自主的（喜欢按自己的想法来）", weights: { A: -0.5, E: -0.3, O: 0,   C: 0,   N: 0   } },
+    { id: "t76", label: "系统的（习惯从整体结构去安排事情）", weights: { C: 0.6, O: -0.3, E: 0,   A: 0,   N: 0   } },
+    { id: "t77", label: "哲理的（喜欢思考人生和意义）", weights: { O: 0.7, C: 0,   E: 0,   A: 0,   N: 0   } },
+    { id: "t78", label: "勇敢的（面对挑战不太退缩）", weights: { N: -0.4, E: 0.6, O: 0,   C: 0,   A: 0   } },
+    { id: "t79", label: "活泼的（整个人比较有活力、爱动）", weights: { E: 0.7, N: -0.3, O: 0,   C: 0,   A: 0   } },
+    { id: "t80", label: "真诚的（表达和内心基本一致）", weights: { A: 0.6, C: 0.4, O: 0,   E: 0,   N: 0   } }
   ];
-
-  // ======== 选项状态 & 分页逻辑 ========
 
   const MIN_SELECTED = 10;
   const TOTAL_PAGES = 6;
@@ -887,7 +522,6 @@
       const labelDiv = document.createElement("div");
       labelDiv.className = "trait-label";
 
-      // 分拆主词与副说明
       const full = tr.label;
       const idx = full.indexOf("（");
       let main = full, sub = "";
@@ -916,15 +550,15 @@
 
     stepInfo.textContent = `第 ${currentPage + 1} / ${TOTAL_PAGES} 步`;
 
-    // 导航按钮状态
-    if (hasSubmitted) {
-      prevBtn.disabled = false; // 提交后上一页仍然可用
-      nextBtn.disabled = true;
-      nextBtn.textContent = "已提交";
-    } else {
-      prevBtn.disabled = currentPage === 0;
+    prevBtn.disabled = currentPage === 0;
+
+    if (!hasSubmitted) {
       nextBtn.disabled = false;
       nextBtn.textContent = currentPage === TOTAL_PAGES - 1 ? "提交测评" : "下一页";
+    } else {
+      // 提交后：按钮用于翻页，不再触发提交
+      nextBtn.disabled = currentPage === TOTAL_PAGES - 1 ? false : false;
+      nextBtn.textContent = currentPage === TOTAL_PAGES - 1 ? "最后一页" : "下一页";
     }
 
     updateSelectedCountLabel();
@@ -937,32 +571,35 @@
   });
 
   nextBtn.addEventListener("click", () => {
+    if (!hasSubmitted && currentPage === TOTAL_PAGES - 1) {
+      handleSubmit(false); // 首次提交
+      return;
+    }
     if (currentPage < TOTAL_PAGES - 1) {
       renderPage(currentPage + 1);
     } else {
-      handleSubmit();
+      // 已在最后一页，什么都不做
     }
   });
 
   recalcBtn.addEventListener("click", () => {
-    handleSubmit(true); // 允许多次根据当前选项重算
+    handleSubmit(true); // 允许多次重算
   });
 
-  // ======== 一致性检测：相反词对 ========
-
+  // 相反词检测
   const contradictionPairs = [
-    { a: "t1", b: "t48" },   // 好胜 vs 知足
-    { a: "t11", b: "t42" },  // 随性 vs 有条理
-    { a: "t11", b: "t46" },  // 随性 vs 按部就班
-    { a: "t19", b: "t43" },  // 多变 vs 一贯
-    { a: "t16", b: "t41" },  // 反传统 vs 传统
-    { a: "t17", b: "t10" },  // 梦幻 vs 务实
-    { a: "t17", b: "t44" },  // 梦幻 vs 现实
-    { a: "t21", b: "t45" },  // 敏感 vs 冷静
-    { a: "t32", b: "t70" },  // 健谈 vs 沉默
-    { a: "t38", b: "t53" },  // 善于交际 vs 内敛
-    { a: "t35", b: "t14" },  // 精力充沛 vs 悠闲
-    { a: "t23", b: "t71" }   // 热烈 vs 从容
+    { a: "t1",  b: "t48" },
+    { a: "t11", b: "t42" },
+    { a: "t11", b: "t46" },
+    { a: "t19", b: "t43" },
+    { a: "t16", b: "t41" },
+    { a: "t17", b: "t10" },
+    { a: "t17", b: "t44" },
+    { a: "t21", b: "t45" },
+    { a: "t32", b: "t70" },
+    { a: "t38", b: "t53" },
+    { a: "t35", b: "t14" },
+    { a: "t23", b: "t71" }
   ];
 
   function checkConsistency() {
@@ -987,14 +624,12 @@
     return { conflictCount: conflicts.length, conflicts };
   }
 
-  // ======== 大五分级配置（4 阶梯） ========
-
   const dimNames = {
-    O: "开放性 O",
-    C: "尽责性 C",
-    E: "外向性 E",
-    A: "宜人性 A",
-    N: "情绪稳定性 N"
+    O: "开放与探索 O",
+    C: "计划与执行 C",
+    E: "社交活力 E",
+    A: "合作与共情 A",
+    N: "情绪敏感度 N"
   };
 
   const profiles = {
@@ -1045,7 +680,7 @@
     E: {
       1: {
         stageLabel: "E1 安静保留型",
-        shortDesc: "偏向独处与安静思考，需要较多个人空间。",
+        shortDesc: "在社交和互动场合更偏安静保留，喜欢独处或小范围交流。",
         abilityKeywords: ["独立思考", "深度专注", "书面表达"]
       },
       2: {
@@ -1055,7 +690,7 @@
       },
       3: {
         stageLabel: "E3 协作外向型",
-        shortDesc: "偏好群体互动与合作，乐于参与讨论和带动氛围。",
+        shortDesc: "偏好群体互动与合作，在社交与表达上较为主动。",
         abilityKeywords: ["会议发言", "协作推动", "氛围带动"]
       },
       4: {
@@ -1089,12 +724,12 @@
     N: {
       1: {
         stageLabel: "N1 高稳定耐压型",
-        shortDesc: "整体情绪稳定，压力来时波动较小，恢复速度较快。",
+        shortDesc: "整体情绪较稳定，压力来时波动较小，恢复速度较快。",
         abilityKeywords: ["压力管理", "冷静决策", "危机应对"]
       },
       2: {
         stageLabel: "N2 高敏感有觉察型",
-        shortDesc: "仍然敏感，但已开始主动寻找调节方式，对自己状态有觉察。",
+        shortDesc: "情绪较敏感，同时能意识到自己的状态并尝试调整。",
         abilityKeywords: ["自我觉察", "情绪命名", "寻求支持"]
       },
       3: {
@@ -1135,11 +770,11 @@
       const sel = selectedAbs[d];
       let norm01;
       if (sel === 0) {
-        norm01 = 0.5; // 信息不足 → 视为中性
+        norm01 = 0.5;
       } else {
         let signed = raw[d] / sel;
         signed = clamp(signed, -1, 1);
-        norm01 = (signed + 1) / 2; // 映射到 [0,1]
+        norm01 = (signed + 1) / 2;
       }
 
       let stage = 1;
@@ -1157,24 +792,19 @@
     return result;
   }
 
-  // ======== Radar 图渲染 ========
-
   function renderRadar(scores) {
     const ctx = document.getElementById("radarChart");
     if (!ctx) return;
     const data = dims.map(d => Math.round(scores[d].norm01 * 100));
-
-    if (radarChartInstance) {
-      radarChartInstance.destroy();
-    }
+    if (radarChartInstance) radarChartInstance.destroy();
 
     radarChartInstance = new Chart(ctx, {
       type: "radar",
       data: {
-        labels: ["开放 O", "尽责 C", "外向 E", "宜人 A", "情绪稳定 N"],
+        labels: ["开放与探索 O", "计划与执行 C", "社交活力 E", "合作与共情 A", "情绪敏感度 N"],
         datasets: [
           {
-            label: "大五维度（0–100）",
+            label: "",
             data: [data[0], data[1], data[2], data[3], data[4]],
             fill: true
           }
@@ -1183,36 +813,24 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
-        },
+        plugins: { legend: { display: false } },
         scales: {
           r: {
             suggestedMin: 0,
             suggestedMax: 100,
-            ticks: {
-              stepSize: 20,
-              display: true
-            },
-            pointLabels: {
-              font: { size: 11 }
-            }
+            ticks: { stepSize: 20, display: true },
+            pointLabels: { font: { size: 11 } }
           }
         }
       }
     });
   }
 
-  // ======== 全局 MBTI / PI / 颜色 / PDP 推断 ========
-
   function inferMBTI(scores) {
     const O = scores.O.norm01;
     const C = scores.C.norm01;
     const E = scores.E.norm01;
     const A = scores.A.norm01;
-    const N = scores.N.norm01;
 
     function dimLetter(val, high, low) {
       if (val >= 0.55) return high;
@@ -1230,8 +848,7 @@
     else jp = "J/P";
 
     const mbti = `${ei}${sn}${tf}${jp}`;
-    let note = "此类型为基于大五维度的近似推断，仅供参考。";
-
+    const note = "该类型为基于大五维度的近似推断，仅供参考，不等同于正式 MBTI 测评。";
     return { mbti, note };
   }
 
@@ -1242,13 +859,9 @@
     const A = scores.A.norm01;
     const N = scores.N.norm01;
 
-    // 近似：A 维度=支配/自我主张（低宜人+高外向）
     const A_pi = clamp(0.6 * (1 - A) + 0.4 * E, 0, 1);
-    // B=外向
     const B_pi = clamp(E, 0, 1);
-    // C=耐心/稳定（低外向+高尽责+低神经）
     const C_pi = clamp(0.5 * (1 - E) + 0.3 * C + 0.2 * (1 - N), 0, 1);
-    // D=严谨/形式化（高尽责+低开放）
     const D_pi = clamp(0.6 * C + 0.4 * (1 - O), 0, 1);
 
     function level(v) {
@@ -1258,11 +871,7 @@
     }
 
     const note = `A（支配/主导）${level(A_pi)}，B（外向/表达）${level(B_pi)}，C（耐心/节奏）${level(C_pi)}，D（严谨/规范）${level(D_pi)}。`;
-
-    return {
-      scores: { A: A_pi, B: B_pi, C: C_pi, D: D_pi },
-      note
-    };
+    return { scores: { A: A_pi, B: B_pi, C: C_pi, D: D_pi }, note };
   }
 
   function inferColorAndPDP(scores, pi) {
@@ -1272,11 +881,10 @@
     const A = scores.A.norm01;
     const N = scores.N.norm01;
 
-    // 粗略映射：黄 = 高 O/E；红 = 高 PI.A；蓝 = 高 PI.D；绿 = 高 A & 高 N
     const yellowIdx = 0.6 * O + 0.4 * E;
     const redIdx = pi.scores.A;
     const blueIdx = pi.scores.D;
-    const greenIdx = 0.6 * A + 0.4 * N;
+    const greenIdx = 0.6 * A + 0.4 * (1 - N);
 
     const arr = [
       { key: "yellow", val: yellowIdx },
@@ -1311,8 +919,6 @@
     return { colorLabel, colorNote, pdpAnimal };
   }
 
-  // ======== 全局文本生成 ========
-
   function buildBig5Narrative(scores) {
     const order = ["O", "C", "E", "A", "N"];
     const items = order.map(d => scores[d].profile.shortDesc);
@@ -1346,7 +952,6 @@ ${numbered}。
     const mbtiRes = inferMBTI(scores);
     const piRes = inferPI(scores);
     const colorRes = inferColorAndPDP(scores, piRes);
-
     const pi = piRes.scores;
 
     const piText = `A=${(pi.A * 100).toFixed(0)}，B=${(pi.B * 100).toFixed(0)}，C=${(pi.C * 100).toFixed(0)}，D=${(pi.D * 100).toFixed(0)}（0–100，相对强度）`;
@@ -1394,8 +999,6 @@ ${numbered}。
     `;
   }
 
-  // ======== 提交 & 结果渲染 ========
-
   function handleSubmit(isRecalc = false) {
     const selectedCount = Object.values(selectedMap).filter(Boolean).length;
     if (selectedCount < MIN_SELECTED) {
@@ -1410,12 +1013,11 @@ ${numbered}。
     statusHint.textContent = "已生成结果，可调整勾选后再次点击「重新根据当前选项计算结果」。";
     recalcBtn.style.display = "inline-flex";
 
-    // 更新按钮状态：上一页可用，“已提交”置灰
-    prevBtn.disabled = false;
-    nextBtn.disabled = true;
-    nextBtn.textContent = "已提交";
+    // 按钮：提交后仍允许翻页
+    prevBtn.disabled = currentPage === 0;
+    nextBtn.disabled = false;
+    nextBtn.textContent = currentPage === TOTAL_PAGES - 1 ? "最后一页" : "下一页";
 
-    // 构建结果 HTML
     const big5Narrative = buildBig5Narrative(scores);
     const perDimHtml = buildPerDimSummary(scores);
     const typeHtml = buildGlobalTypeSection(scores);
@@ -1439,8 +1041,6 @@ ${numbered}。
 
     renderRadar(scores);
   }
-
-  // ======== 初始化 ========
 
   renderPage(0);
 </script>
