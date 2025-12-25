@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>人格选词测评 v0.4</title>
+  <title>人格选词测评 v0.41</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -401,7 +401,7 @@
                type="text"
                placeholder="例如：小李 / Alex" />
       </div>
-      <div class="version-line">v0.4 实验版 · 仅供自我探索与讨论使用</div>
+      <div class="version-line">v0.41 实验版 · 仅供自我探索与讨论使用</div>
     </div>
 
     <div class="main-layout">
@@ -450,7 +450,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // 1. 配置 Google Apps Script Web App 地址（已替换为你的）
+  // 配置：Apps Script Web App 地址（收集结果用）
   const GS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwOCyI1r--9P9RnP-9jTkKus5utI2tnfbF4-gnTtqqF1GiZmrt4B3Bgy-IS5Idc2Wc/exec";
 
   // 2. 微信二维码图片地址：请替换为你自己的微信二维码链接
@@ -472,9 +472,8 @@
 
   const dims = ["O", "C", "E", "A", "N"]; // 开放、尽责、社交活力、合作/共情、情绪敏感度
 
-  // 3. 词库：85 词（中性或偏正向），带多维度权重
+  // 词库（85 词）
   const traits = [
-    // 1–10：动力与主张
     { id: "t1", label: "好胜的（有竞争心，喜欢赢）",
       weights: { A: -0.6, C: 0.2, N: 0.2, O: 0, E: 0 } },
     { id: "t2", label: "坚定的（主见明确，敢于表达立场）",
@@ -496,7 +495,6 @@
     { id: "t10", label: "务实的（关注现实与可行性）",
       weights: { O: -0.5, C: 0.4, N: -0.1, E: 0, A: 0 } },
 
-    // 11–20：灵活与自由
     { id: "t11", label: "随性的（不太按固定计划来）",
       weights: { C: -0.6, O: 0.3, N: 0.1, E: 0, A: 0 } },
     { id: "t12", label: "灵活的（容易变通和调整）",
@@ -518,7 +516,6 @@
     { id: "t20", label: "大胆的（愿意尝试有风险的选择）",
       weights: { C: -0.2, O: 0.4, N: -0.1, E: 0, A: 0 } },
 
-    // 21–30：敏感与深度
     { id: "t21", label: "敏感的（对细微变化很有感觉）",
       weights: { N: 0.6, O: 0.3, A: 0.2, C: 0, E: 0 } },
     { id: "t22", label: "感性的（容易被情绪和氛围打动）",
@@ -540,7 +537,6 @@
     { id: "t30", label: "谦卑的（为人低调不张扬）",
       weights: { A: 0.5, E: -0.3, N: 0.2, O: 0, C: 0 } },
 
-    // 31–40：社交与活力
     { id: "t31", label: "充满磁性的（容易吸引别人注意）",
       weights: { E: 0.7, O: 0.3, C: 0, A: 0, N: 0 } },
     { id: "t32", label: "健谈的（话比较多，容易聊起来）",
@@ -562,7 +558,6 @@
     { id: "t40", label: "宽容的（对不同意见比较包容）",
       weights: { A: 0.7, O: 0.3, C: 0, E: 0, N: 0 } },
 
-    // 41–50：稳重与传统
     { id: "t41", label: "传统的（更认同熟悉的做法）",
       weights: { O: -0.6, C: 0.4, A: 0.2, E: 0, N: 0 } },
     { id: "t42", label: "有条理的（做事有计划、有次序）",
@@ -584,7 +579,6 @@
     { id: "t50", label: "常规的（倾向按规则办事）",
       weights: { O: -0.6, A: 0.3, C: 0.3, E: 0, N: 0 } },
 
-    // 51–70：混合补充
     { id: "t51", label: "善解人意的（容易理解他人感受）",
       weights: { A: 0.6, O: 0.3, C: 0, E: 0, N: 0 } },
     { id: "t52", label: "注重细节的（会注意到小地方）",
@@ -646,7 +640,6 @@
     { id: "t80", label: "真诚的（表达和内心基本一致）",
       weights: { A: 0.6, C: 0.4, O: 0, E: 0, N: 0 } },
 
-    // 81–85：内向优势 / 危机感 / 对事不对人
     { id: "t81", label: "善于倾听的（更愿意听清楚再回应）",
       weights: { E: -0.5, A: 0.3, O: 0, C: 0, N: 0 } },
     { id: "t82", label: "注重隐私的（不太愿意公开个人细节）",
@@ -680,7 +673,6 @@
   const recalcBtn         = document.getElementById("recalcBtn");
   const nicknameInput     = document.getElementById("nicknameInput");
 
-  // 预填本机曾用昵称
   try {
     const storedNick = localStorage.getItem("personality_nickname");
     if (storedNick) nicknameInput.value = storedNick;
@@ -695,6 +687,23 @@
     const text = trait.label;
     const idx  = text.indexOf("（");
     return idx === -1 ? text : text.slice(0, idx);
+  }
+
+  function scrollToTraitsTop() {
+    const leftPanel = document.querySelector(".left-panel");
+    if (leftPanel && leftPanel.scrollIntoView) {
+      leftPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (traitsContainer) traitsContainer.scrollTop = 0;
+  }
+
+  function scrollToResultTop() {
+    const panel = document.getElementById("resultPanel");
+    if (panel && panel.scrollIntoView) {
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   function renderPage(pageIndex) {
@@ -764,7 +773,10 @@
   }
 
   prevBtn.addEventListener("click", () => {
-    if (currentPage > 0) renderPage(currentPage - 1);
+    if (currentPage > 0) {
+      renderPage(currentPage - 1);
+      scrollToTraitsTop();
+    }
   });
 
   nextBtn.addEventListener("click", () => {
@@ -774,6 +786,7 @@
     }
     if (currentPage < TOTAL_PAGES - 1) {
       renderPage(currentPage + 1);
+      scrollToTraitsTop();
     }
   });
 
@@ -781,7 +794,6 @@
     handleSubmit(true);
   });
 
-  // 相反词检测
   const contradictionPairs = [
     { a: "t1",  b: "t48" },
     { a: "t11", b: "t42" },
@@ -940,34 +952,21 @@
     }
   };
 
-  function clamp(x, min, max) {
-    return Math.max(min, Math.min(max, x));
-  }
+  function clamp(x, min, max) { return Math.max(min, Math.min(max, x)); }
 
-  // 4. 按维度累加权重 + 固定 SCALE 归一化
   function scoreBigFive() {
     const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
 
     traits.forEach(tr => {
       if (!selectedMap[tr.id]) return;
-      dims.forEach(d => {
-        raw[d] += (tr.weights[d] || 0);
-      });
+      dims.forEach(d => { raw[d] += (tr.weights[d] || 0); });
     });
 
-    // 避免天花板效应：不同维度使用不同 SCALE
-    const SCALE = {
-      O: 10.0,
-      C: 10.0,
-      E: 12.0,
-      A: 10.0,
-      N:  8.0
-    };
+    const SCALE = { O: 10, C: 10, E: 12, A: 10, N: 8 };
 
     const result = {};
     dims.forEach(d => {
-      let rawVal = raw[d];
-      let normSigned = rawVal / (SCALE[d] || 10.0);
+      let normSigned = raw[d] / (SCALE[d] || 10);
       normSigned = clamp(normSigned, -1, 1);
       let norm01 = (normSigned + 1) / 2;
 
@@ -984,11 +983,7 @@
         else                     stage = 1;
       }
 
-      result[d] = {
-        norm01,
-        stage,
-        profile: profiles[d][stage]
-      };
+      result[d] = { norm01, stage, profile: profiles[d][stage] };
     });
 
     return result;
@@ -1003,13 +998,15 @@
     radarChartInstance = new Chart(ctx, {
       type: "radar",
       data: {
-        labels: ["开放与探索 O", "计划与执行 C", "社交活力 E", "合作与共情 A", "情绪敏感度 N"],
+        labels: [
+          "开放与探索 O",
+          "计划与执行 C",
+          "社交活力 E",
+          "合作与共情 A",
+          "情绪敏感度 N"
+        ],
         datasets: [
-          {
-            label: "",
-            data: [data[0], data[1], data[2], data[3], data[4]],
-            fill: true
-          }
+          { data, fill: true }
         ]
       },
       options: {
@@ -1020,7 +1017,7 @@
           r: {
             suggestedMin: 0,
             suggestedMax: 100,
-            ticks: { stepSize: 20, display: true },
+            ticks: { stepSize: 20 },
             pointLabels: { font: { size: 11 } }
           }
         }
@@ -1075,13 +1072,11 @@
     const C = scores.C.norm01;
     const E = scores.E.norm01;
     const A = scores.A.norm01;
-    const N = scores.N.norm01;
 
     let A_pi = 0.7 * E + 0.5 * (1 - A);
     A_pi = clamp(A_pi / 1.2, 0, 1);
-
     const B_pi = clamp(E, 0, 1);
-    const C_pi = clamp(0.5 * (1 - E) + 0.3 * C + 0.2 * (1 - N), 0, 1);
+    const C_pi = clamp(0.5 * (1 - E) + 0.3 * C + 0.2 * (1 - scores.N.norm01), 0, 1);
     const D_pi = clamp(0.6 * C + 0.4 * (1 - O), 0, 1);
 
     function level(v) {
@@ -1242,8 +1237,6 @@ ${numbered}。
 
   function setupShareButtons() {
     const saveBtn = document.getElementById("saveImageBtn");
-    const copyBtn = document.getElementById("copyLinkBtn");
-
     if (saveBtn) {
       saveBtn.onclick = () => {
         const panel = document.getElementById("resultPanel");
@@ -1267,17 +1260,6 @@ ${numbered}。
         });
       };
     }
-
-    if (copyBtn) {
-      copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(window.location.href);
-          alert("当前页面链接已复制，你可以粘贴发送给他人。");
-        } catch (e) {
-          alert("复制失败，请手动复制浏览器地址栏中的链接。");
-        }
-      };
-    }
   }
 
   function handleSubmit(isRecalc = false) {
@@ -1287,9 +1269,7 @@ ${numbered}。
       nicknameInput.focus();
       return;
     }
-    try {
-      localStorage.setItem("personality_nickname", nickname);
-    } catch (e) {}
+    try { localStorage.setItem("personality_nickname", nickname); } catch (e) {}
 
     const selectedCount = Object.values(selectedMap).filter(Boolean).length;
     if (selectedCount < MIN_SELECTED) {
@@ -1297,7 +1277,6 @@ ${numbered}。
       return;
     }
 
-    // 1. 计算得分 + 一致性
     const scores      = scoreBigFive();
     const consistency = checkConsistency();
 
@@ -1309,7 +1288,6 @@ ${numbered}。
     nextBtn.disabled = false;
     nextBtn.textContent = currentPage === TOTAL_PAGES - 1 ? "最后一页" : "下一页";
 
-    // 2. 前端展示
     const big5Narrative   = buildBig5Narrative(scores);
     const perDimHtml      = buildPerDimSummary(scores);
     const typeHtml        = buildGlobalTypeSection(scores);
@@ -1340,10 +1318,9 @@ ${numbered}。
       ${typeHtml}
       <div class="result-block" id="shareBlock">
         <h3>结果保存与进一步分析</h3>
-        <p>你可以将当前结果保存为图片，或复制本页面链接分享给他人。</p>
+        <p>你可以将当前结果保存为图片，并通过微信等方式转发。</p>
         <div class="share-actions">
           <button type="button" class="btn-secondary" id="saveImageBtn">保存结果为图片</button>
-          <button type="button" class="btn-ghost" id="copyLinkBtn">复制当前页面链接</button>
         </div>
         <div class="qr-area">
           <div class="qr-text">
@@ -1356,8 +1333,9 @@ ${numbered}。
 
     renderRadar(scores);
     setupShareButtons();
+    scrollToResultTop();
 
-    // 3. 上报 Google Sheets
+    // 后端记录到 Google Sheets
     try {
       const selectedTraits = traits
         .filter(tr => selectedMap[tr.id])
@@ -1395,8 +1373,6 @@ ${numbered}。
         }).catch(err => {
           console.error("上报测评结果失败：", err);
         });
-      } else {
-        console.warn("GS_WEB_APP_URL 未配置，未上报到 Google 表格。");
       }
     } catch (err) {
       console.error("构造或发送上报数据出错：", err);
@@ -1408,3 +1384,5 @@ ${numbered}。
 </script>
 </body>
 </html>
+
+
