@@ -286,6 +286,20 @@
       height: auto !important;
     }
 
+    .user-tag-input {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .user-tag-input input {
+      padding: 4px 6px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      min-width: 140px;
+    }
+
     @media (max-width: 900px) {
       .card {
         padding: 18px 16px 20px;
@@ -325,6 +339,10 @@
       <div class="subtitle">
         请从下面的词语中勾选「像我」的描述，<strong>最少选择 10 个</strong>。<br />
         词语都是中性或偏正向的表达，用来捕捉你的偏好和风格，而不是评判好坏。
+      </div>
+      <div class="user-tag-input">
+        测评昵称 / 编号（选填）： 
+        <input id="userTag" type="text" placeholder="例如：小明 / 2024-001" />
       </div>
     </div>
 
@@ -370,11 +388,34 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  // 你的 Apps Script Web 应用地址
+  const GS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzno1MNC9Em9pQ9FKUawifRSvlIXdi7pWQL8Wq9icgdl7ncE-cHJXKMIMXdqFey6Q_AkQ/exec";
+
+  // 为每个浏览器生成一个匿名 clientId
+  function getClientId() {
+    try {
+      let cid = localStorage.getItem("personality_client_id");
+      if (!cid) {
+        cid =
+          "u_" +
+          Math.random().toString(16).slice(2) +
+          Date.now().toString(16);
+        localStorage.setItem("personality_client_id", cid);
+      }
+      return cid;
+    } catch (e) {
+      return (
+        "u_" +
+        Math.random().toString(16).slice(2) +
+        Date.now().toString(16)
+      );
+    }
+  }
+
   const dims = ["O", "C", "E", "A", "N"]; // 开放、尽责、社交活力、宜人、情绪敏感度
 
-  // 词库：已把“好胜、有野心、敢言、大胆、勇敢”等从 E 中剥离
+  // 85 个词汇（略，请保留原样）—— 和之前那版完全一致
   const traits = [
-    // 1–10：动力与主张（不再拉高 E，只影响 A/C/N 等）
     { id: "t1", label: "好胜的（有竞争心，喜欢赢）",
       weights: { A: -0.6, C: 0.2, N: 0.2, O: 0, E: 0 } },
     { id: "t2", label: "坚定的（主见明确，敢于表达立场）",
@@ -396,7 +437,6 @@
     { id: "t10", label: "务实的（关注现实与可行性）",
       weights: { O: -0.5, C: 0.4, N: -0.1, E: 0, A: 0 } },
 
-    // 11–20：灵活与自由
     { id: "t11", label: "随性的（不太按固定计划来）",
       weights: { C: -0.6, O: 0.3, N: 0.1, E: 0, A: 0 } },
     { id: "t12", label: "灵活的（容易变通和调整）",
@@ -418,7 +458,6 @@
     { id: "t20", label: "大胆的（愿意尝试有风险的选择）",
       weights: { C: -0.2, O: 0.4, N: -0.1, E: 0, A: 0 } },
 
-    // 21–30：敏感与深度
     { id: "t21", label: "敏感的（对细微变化很有感觉）",
       weights: { N: 0.6, O: 0.3, A: 0.2, C: 0, E: 0 } },
     { id: "t22", label: "感性的（容易被情绪和氛围打动）",
@@ -440,7 +479,6 @@
     { id: "t30", label: "谦卑的（为人低调不张扬）",
       weights: { A: 0.5, E: -0.3, N: 0.2, O: 0, C: 0 } },
 
-    // 31–40：真正的社交与活力信号
     { id: "t31", label: "充满磁性的（容易吸引别人注意）",
       weights: { E: 0.7, O: 0.3, C: 0, A: 0, N: 0 } },
     { id: "t32", label: "健谈的（话比较多，容易聊起来）",
@@ -462,7 +500,6 @@
     { id: "t40", label: "宽容的（对不同意见比较包容）",
       weights: { A: 0.7, O: 0.3, C: 0, E: 0, N: 0 } },
 
-    // 41–50：稳重与传统
     { id: "t41", label: "传统的（更认同熟悉的做法）",
       weights: { O: -0.6, C: 0.4, A: 0.2, E: 0, N: 0 } },
     { id: "t42", label: "有条理的（做事有计划、有次序）",
@@ -484,7 +521,6 @@
     { id: "t50", label: "常规的（倾向按规则办事）",
       weights: { O: -0.6, A: 0.3, C: 0.3, E: 0, N: 0 } },
 
-    // 51–70：混合补充
     { id: "t51", label: "善解人意的（容易理解他人感受）",
       weights: { A: 0.6, O: 0.3, C: 0, E: 0, N: 0 } },
     { id: "t52", label: "注重细节的（会注意到小地方）",
@@ -546,7 +582,6 @@
     { id: "t80", label: "真诚的（表达和内心基本一致）",
       weights: { A: 0.6, C: 0.4, O: 0, E: 0, N: 0 } },
 
-    // 81–85：新增内向优势 / 危机感 / 对事不对人
     { id: "t81", label: "善于倾听的（更愿意听清楚再回应）",
       weights: { E: -0.5, A: 0.3, O: 0, C: 0, N: 0 } },
     { id: "t82", label: "注重隐私的（不太愿意公开个人细节）",
@@ -676,7 +711,6 @@
     handleSubmit(true);
   });
 
-  // 相反词检测
   const contradictionPairs = [
     { a: "t1",  b: "t48" },
     { a: "t11", b: "t42" },
@@ -839,7 +873,6 @@
     return Math.max(min, Math.min(max, x));
   }
 
-  // 新算法：按维度累加权重 + 固定 SCALE 归一化
   function scoreBigFive() {
     const raw = { O: 0, C: 0, E: 0, A: 0, N: 0 };
 
@@ -850,13 +883,12 @@
       });
     });
 
-    // 采纳你的建议：不同维度使用不同 SCALE，避免天花板效应
-    const SCALE = { 
-      O: 10.0, 
-      C: 10.0, 
-      E: 12.0, 
-      A: 10.0, 
-      N: 8.0 
+    const SCALE = {
+      O: 10.0,
+      C: 10.0,
+      E: 12.0,
+      A: 10.0,
+      N: 8.0
     };
 
     const result = {};
@@ -970,13 +1002,12 @@
     const C = scores.C.norm01;
     const E = scores.E.norm01;
     const A = scores.A.norm01;
-    const N = scores.N.norm01;
 
     let A_pi = 0.7 * E + 0.5 * (1 - A);
     A_pi = clamp(A_pi / 1.2, 0, 1);
 
     const B_pi = clamp(E, 0, 1);
-    const C_pi = clamp(0.5 * (1 - E) + 0.3 * C + 0.2 * (1 - N), 0, 1);
+    const C_pi = clamp(0.5 * (1 - E) + 0.3 * C + 0.2 * (1 - scores.N.norm01), 0, 1);
     const D_pi = clamp(0.6 * C + 0.4 * (1 - O), 0, 1);
 
     function level(v) {
@@ -991,7 +1022,6 @@
 
   function inferColorAndPDP(scores, pi) {
     const O = scores.O.norm01;
-    const C = scores.C.norm01;
     const E = scores.E.norm01;
     const A = scores.A.norm01;
     const N = scores.N.norm01;
@@ -1136,6 +1166,15 @@ ${numbered}。
   }
 
   function handleSubmit(isRecalc = false) {
+  // 先检查昵称必填
+  const tagInput = document.getElementById("userTag");
+  const userTag = tagInput ? tagInput.value.trim() : "";
+  if (!userTag) {
+    alert("请先填写一个测评昵称或编号，方便后续识别自己的结果。");
+    if (tagInput) tagInput.focus();
+    return;
+  }
+
     const selectedCount = Object.values(selectedMap).filter(Boolean).length;
     if (selectedCount < MIN_SELECTED) {
       alert(`请至少选择 ${MIN_SELECTED} 个「像我」的词语，目前只选了 ${selectedCount} 个。`);
@@ -1177,6 +1216,55 @@ ${numbered}。
     `;
 
     renderRadar(scores);
+
+    try {
+      const selectedTraits = traits
+        .filter(tr => selectedMap[tr.id])
+        .map(tr => tr.id);
+
+      const mbtiRes  = inferMBTI(scores);
+      const piRes    = inferPI(scores);
+      const colorRes = inferColorAndPDP(scores, piRes);
+
+      const tagInput = document.getElementById("userTag");
+      const userTag  = tagInput ? tagInput.value.trim() : "";
+
+      const payload = {
+        clientId: getClientId(),
+        isRecalc: !!isRecalc,
+        selectedCount,
+        selectedTraits,
+        O: { norm01: scores.O.norm01, stage: scores.O.stage },
+        C: { norm01: scores.C.norm01, stage: scores.C.stage },
+        E: { norm01: scores.E.norm01, stage: scores.E.stage },
+        A: { norm01: scores.A.norm01, stage: scores.A.stage },
+        N: { norm01: scores.N.norm01, stage: scores.N.stage },
+        mbti: mbtiRes.mbti,
+        pi: piRes.scores,
+        color: {
+          colorLabel: colorRes.colorLabel,
+          pdpAnimal: colorRes.pdpAnimal
+        },
+        userTag: userTag
+      };
+
+      if (GS_WEB_APP_URL && GS_WEB_APP_URL.startsWith("http")) {
+        fetch(GS_WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload)
+        }).catch(err => {
+          console.error("上报测评结果失败：", err);
+        });
+      } else {
+        console.warn("GS_WEB_APP_URL 未配置，未上报到 Google 表格。");
+      }
+    } catch (err) {
+      console.error("构造或发送上报数据出错：", err);
+    }
   }
 
   renderPage(0);
